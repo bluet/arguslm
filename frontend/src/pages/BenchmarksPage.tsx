@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Clock, Check, ChevronDown, ChevronUp, Activity, AlertCircle } from 'lucide-react';
+import { Play, Clock, Check, ChevronDown, ChevronUp, Activity, AlertCircle, Download } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { benchmarksApi } from '../api/benchmarks';
 import { modelsApi } from '../api/models';
+import { exportBenchmark } from '../api/export';
 import { BenchmarkRun, BenchmarkResult } from '../types/benchmark';
 import { Model } from '../types/model';
 
@@ -392,7 +393,35 @@ export default function BenchmarksPage() {
                         <tr>
                           <td colSpan={6} className="px-0 py-0 bg-gray-50 dark:bg-gray-900/50">
                             <div className="p-6 border-t border-b border-gray-200 dark:border-gray-700 animate-in slide-in-from-top-2 duration-200">
-                              <h4 className="text-sm font-semibold mb-4 text-gray-900 dark:text-gray-100">Run Results</h4>
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Run Results</h4>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      exportBenchmark(run.id, 'json').catch(err => console.error('Export failed:', err));
+                                    }}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    JSON
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      exportBenchmark(run.id, 'csv').catch(err => console.error('Export failed:', err));
+                                    }}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    CSV
+                                  </Button>
+                                </div>
+                              </div>
                               
                               {!historyResults[run.id] ? (
                                 <div className="flex justify-center py-4">

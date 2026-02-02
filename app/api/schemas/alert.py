@@ -10,27 +10,60 @@ from pydantic import BaseModel, ConfigDict, Field
 class AlertRuleCreate(BaseModel):
     """Schema for creating a new alert rule."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Rule name")
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Descriptive name for the alert rule",
+        examples=["Critical Model Down Alert"],
+    )
     rule_type: str = Field(
         ...,
-        description="Rule type: any_model_down, specific_model_down, model_unavailable_everywhere, performance_degradation",
+        description="Type of rule to evaluate: any_model_down, specific_model_down, model_unavailable_everywhere, performance_degradation",
+        examples=["any_model_down"],
     )
     target_model_id: Optional[UUID] = Field(
-        None, description="Target model ID (required for specific_model_down)"
+        None,
+        description="Target model ID (required only for specific_model_down)",
+        examples=["550e8400-e29b-41d4-a716-446655440000"],
     )
     target_model_name: Optional[str] = Field(
-        None, description="Target model name (required for model_unavailable_everywhere)"
+        None,
+        description="Target model name (required only for model_unavailable_everywhere)",
+        examples=["gpt-4o"],
     )
-    enabled: bool = Field(default=True, description="Enable/disable rule")
-    notify_in_app: bool = Field(default=True, description="Send in-app notifications")
+    enabled: bool = Field(
+        default=True,
+        description="Whether the rule is currently active",
+        examples=[True],
+    )
+    notify_in_app: bool = Field(
+        default=True,
+        description="Whether to show notifications in the web dashboard",
+        examples=[True],
+    )
 
 
 class AlertRuleUpdate(BaseModel):
-    """Schema for updating an alert rule."""
+    """Schema for updating an existing alert rule."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Rule name")
-    enabled: Optional[bool] = Field(None, description="Enable/disable rule")
-    notify_in_app: Optional[bool] = Field(None, description="Send in-app notifications")
+    name: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=255,
+        description="New name for the rule",
+        examples=["Updated Alert Name"],
+    )
+    enabled: Optional[bool] = Field(
+        None,
+        description="Enable or disable the rule",
+        examples=[False],
+    )
+    notify_in_app: Optional[bool] = Field(
+        None,
+        description="Enable or disable in-app notifications",
+        examples=[True],
+    )
 
 
 class AlertRuleResponse(BaseModel):
@@ -72,3 +105,16 @@ class AlertListResponse(BaseModel):
     unacknowledged_count: int = Field(..., description="Count of unacknowledged alerts")
     limit: int = Field(..., description="Limit used in query")
     offset: int = Field(..., description="Offset used in query")
+
+
+class UnreadCountResponse(BaseModel):
+    """Schema for unread alert count response."""
+
+    count: int = Field(..., description="Number of unacknowledged alerts")
+
+
+class RecentAlertsResponse(BaseModel):
+    """Schema for recent alerts response (for notification dropdown)."""
+
+    items: list[AlertResponse] = Field(..., description="List of recent alerts")
+    total_unread: int = Field(..., description="Total unacknowledged alerts count")

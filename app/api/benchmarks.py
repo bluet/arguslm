@@ -13,6 +13,7 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
+    Response,
     WebSocket,
     WebSocketDisconnect,
     status,
@@ -378,6 +379,129 @@ async def get_benchmark_results(
     return BenchmarkResultListResponse(
         results=result_responses,
         total=len(result_responses),
+    )
+
+
+@router.get("/{run_id}/export")
+async def export_benchmark(
+    run_id: uuid.UUID,
+    format: str = Query("json", pattern="^(json|csv)$"),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export benchmark results in JSON or CSV format.
+
+    Args:
+        run_id: Benchmark run ID
+        format: Export format (json or csv)
+        db: Database session
+
+    Returns:
+        File download response with appropriate content type
+    """
+    # Get benchmark run with results
+    result = await db.execute(
+        select(BenchmarkRun)
+        .where(BenchmarkRun.id == run_id)
+        .options(selectinload(BenchmarkRun.results))
+    )
+    run = result.scalar_one_or_none()
+
+    if not run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Benchmark run {run_id} not found",
+        )
+
+    # Get model names and providers
+    model_ids = [r.model_id for r in run.results]
+    models_result = await db.execute(
+        select(Model).where(Model.id.in_(model_ids)).options(selectinload(Model.provider_account))
+    )
+    models = models_result.scalars().all()
+    models_map = {
+        m.id: (m.custom_name or m.model_id, m.provider_account.provider_type) for m in models
+    }
+
+    if format == "json":
+        # Build JSON export
+        export_data = {
+            "run_id": str(run.id),
+            "run_name": run.name,
+            "prompt_pack": run.prompt_pack,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+            "results": [],
+        }
+
+        for r in run.results:
+            model_name, provider = models_map.get(r.model_id, ("Unknown", "Unknown"))
+            export_data["results"].append(
+                {
+                    "model_name": model_name,
+                    "provider": provider,
+                    "ttft_ms": r.ttft_ms,
+                    "tps": r.tps,
+                    "tps_excluding_ttft": r.tps_excluding_ttft,
+                    "total_latency_ms": r.total_latency_ms,
+                    "input_tokens": r.input_tokens,
+                    "output_tokens": r.output_tokens,
+                    "error": r.error,
+                    "timestamp": r.created_at.isoformat() if r.created_at else None,
+                }
+            )
+
+        import json
+
+        content = json.dumps(export_data, indent=2)
+        media_type = "application/json"
+        filename = f"benchmark_{run_id}.json"
+    else:  # CSV format
+        import csv
+        from io import StringIO
+
+        output = StringIO()
+        writer = csv.DictWriter(
+            output,
+            fieldnames=[
+                "model_name",
+                "provider",
+                "ttft_ms",
+                "tps",
+                "tps_excluding_ttft",
+                "total_latency_ms",
+                "input_tokens",
+                "output_tokens",
+                "error",
+                "timestamp",
+            ],
+        )
+        writer.writeheader()
+
+        for r in run.results:
+            model_name, provider = models_map.get(r.model_id, ("Unknown", "Unknown"))
+            writer.writerow(
+                {
+                    "model_name": model_name,
+                    "provider": provider,
+                    "ttft_ms": r.ttft_ms,
+                    "tps": r.tps,
+                    "tps_excluding_ttft": r.tps_excluding_ttft,
+                    "total_latency_ms": r.total_latency_ms,
+                    "input_tokens": r.input_tokens,
+                    "output_tokens": r.output_tokens,
+                    "error": r.error or "",
+                    "timestamp": r.created_at.isoformat() if r.created_at else "",
+                }
+            )
+
+        content = output.getvalue()
+        media_type = "text/csv; charset=utf-8"
+        filename = f"benchmark_{run_id}.csv"
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

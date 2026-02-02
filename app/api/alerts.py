@@ -14,6 +14,8 @@ from app.api.schemas.alert import (
     AlertRuleCreate,
     AlertRuleResponse,
     AlertRuleUpdate,
+    RecentAlertsResponse,
+    UnreadCountResponse,
 )
 from app.db.init import get_db
 from app.models.alert import Alert, AlertRule
@@ -202,6 +204,57 @@ async def list_alerts(
         unacknowledged_count=unacknowledged_count,
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get("/unread-count", response_model=UnreadCountResponse)
+async def get_unread_count(db: AsyncSession = Depends(get_db)) -> UnreadCountResponse:
+    """Get count of unacknowledged alerts.
+
+    For notification badge display in the UI.
+
+    Args:
+        db: Database session.
+
+    Returns:
+        Count of unacknowledged alerts.
+    """
+    stmt = select(Alert).where(Alert.acknowledged == False)
+    result = await db.execute(stmt)
+    count = len(result.scalars().all())
+    return UnreadCountResponse(count=count)
+
+
+@router.get("/recent", response_model=RecentAlertsResponse)
+async def get_recent_alerts(
+    limit: int = Query(10, ge=1, le=50, description="Maximum alerts to return"),
+    db: AsyncSession = Depends(get_db),
+) -> RecentAlertsResponse:
+    """Get recent alerts for notification dropdown.
+
+    Returns the most recent alerts (both acknowledged and not) for display
+    in the notification dropdown, plus total unread count for badge.
+
+    Args:
+        limit: Maximum number of alerts to return (default 10, max 50).
+        db: Database session.
+
+    Returns:
+        Recent alerts list and total unread count.
+    """
+    # Get recent alerts
+    stmt = select(Alert).order_by(desc(Alert.created_at)).limit(limit)
+    result = await db.execute(stmt)
+    alerts = result.scalars().all()
+
+    # Get total unread count
+    unread_stmt = select(Alert).where(Alert.acknowledged == False)
+    unread_result = await db.execute(unread_stmt)
+    total_unread = len(unread_result.scalars().all())
+
+    return RecentAlertsResponse(
+        items=[AlertResponse.model_validate(alert) for alert in alerts],
+        total_unread=total_unread,
     )
 
 

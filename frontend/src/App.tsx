@@ -6,6 +6,7 @@ import { ProvidersPage } from './pages/ProvidersPage';
 import { ModelsPage } from './pages/ModelsPage';
 import BenchmarksPage from './pages/BenchmarksPage';
 import MonitoringPage from './pages/MonitoringPage';
+import { NotificationBell } from './components/NotificationBell';
 
 const SidebarItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => {
   const location = useLocation();
@@ -32,9 +33,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-gray-800 bg-gray-950 flex flex-col fixed h-full z-10">
         <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center space-x-2">
-            <Activity className="w-6 h-6 text-blue-500" />
-            <span className="text-lg font-bold tracking-tight text-white">LLM Perf Mon</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Activity className="w-6 h-6 text-blue-500" />
+              <span className="text-lg font-bold tracking-tight text-white">LLM Perf Mon</span>
+            </div>
+            <NotificationBell />
           </div>
         </div>
         

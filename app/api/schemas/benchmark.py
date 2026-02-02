@@ -7,34 +7,37 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class BenchmarkCreate(BaseModel):
-    """Schema for creating a benchmark run."""
+    """Schema for creating a new benchmark run."""
 
     model_ids: list[UUID] = Field(
         ...,
-        description="List of model UUIDs to benchmark",
+        description="List of model UUIDs to include in this benchmark run",
         min_length=1,
+        examples=[["550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8"]],
     )
     prompt_pack: str = Field(
         ...,
-        description="Prompt pack to use (shakespeare, synthetic_short, synthetic_medium, synthetic_long)",
+        description="The set of prompts to use for benchmarking (e.g., 'shakespeare', 'synthetic_medium')",
         examples=["shakespeare"],
     )
     name: str | None = Field(
         None,
-        description="Optional name for the benchmark run",
-        examples=["Nightly benchmark"],
+        description="Optional descriptive name for this benchmark run",
+        examples=["Weekly Performance Audit"],
     )
     max_tokens: int = Field(
         200,
-        description="Maximum tokens to generate per request",
+        description="Maximum number of tokens to generate for each request",
         ge=1,
         le=4096,
+        examples=[500],
     )
     num_runs: int = Field(
         3,
-        description="Number of runs per model",
+        description="Number of times to run the benchmark for each model to get an average",
         ge=1,
         le=10,
+        examples=[5],
     )
 
 

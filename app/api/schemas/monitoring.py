@@ -21,13 +21,24 @@ class MonitoringConfigResponse(BaseModel):
 
 
 class MonitoringConfigUpdate(BaseModel):
-    """Schema for updating monitoring configuration."""
+    """Schema for updating the global monitoring configuration."""
 
     interval_minutes: Optional[int] = Field(
-        None, ge=1, description="Monitoring interval in minutes"
+        None,
+        ge=1,
+        description="How often to run health checks (in minutes)",
+        examples=[15],
     )
-    prompt_pack: Optional[str] = Field(None, description="Prompt pack to use for checks")
-    enabled: Optional[bool] = Field(None, description="Whether monitoring is enabled")
+    prompt_pack: Optional[str] = Field(
+        None,
+        description="The prompt pack to use for health checks",
+        examples=["shakespeare"],
+    )
+    enabled: Optional[bool] = Field(
+        None,
+        description="Whether automated monitoring is globally enabled",
+        examples=[True],
+    )
 
 
 class MonitoringRunResponse(BaseModel):

@@ -4,9 +4,10 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.schemas.monitoring import (
     MonitoringConfigResponse,
@@ -15,6 +16,7 @@ from app.api.schemas.monitoring import (
     UptimeCheckResponse,
     UptimeHistoryResponse,
 )
+from app.core.alert_evaluator import evaluate_alerts
 from app.core.uptime import check_uptime
 from app.db.init import get_db
 from app.models.model import Model
@@ -102,10 +104,15 @@ async def run_uptime_checks(db: AsyncSession) -> None:
     result = await db.execute(stmt)
     models = result.scalars().all()
 
-    # Run checks for each model
+    # Run checks for each model and collect results
+    uptime_checks: list[UptimeCheck] = []
     for model in models:
         uptime_check = await check_uptime(model)
         db.add(uptime_check)
+        uptime_checks.append(uptime_check)
+
+    # Evaluate alert rules against uptime results
+    await evaluate_alerts(db, uptime_checks)
 
     # Update last_run_at
     config = await get_or_create_default_config(db)
@@ -206,4 +213,127 @@ async def get_uptime_history(
         total=total,
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get("/uptime/export")
+async def export_uptime_history(
+    format: str = Query("json", pattern="^(json|csv)$"),
+    model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
+    start_date: Optional[datetime] = Query(None, description="Filter by created_at >= start_date"),
+    end_date: Optional[datetime] = Query(None, description="Filter by created_at <= end_date"),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export uptime check history in JSON or CSV format.
+
+    Args:
+        format: Export format (json or csv)
+        model_id: Optional filter by model ID
+        start_date: Optional filter by start date
+        end_date: Optional filter by end date
+        db: Database session
+
+    Returns:
+        File download response with appropriate content type
+    """
+    # Build query with filters
+    filters = []
+
+    if model_id is not None:
+        filters.append(UptimeCheck.model_id == model_id)
+
+    if start_date is not None:
+        filters.append(UptimeCheck.created_at >= start_date)
+
+    if end_date is not None:
+        filters.append(UptimeCheck.created_at <= end_date)
+
+    # Get uptime checks with model info
+    stmt = (
+        select(UptimeCheck)
+        .options(selectinload(UptimeCheck.model).selectinload(Model.provider_account))
+        .order_by(desc(UptimeCheck.created_at))
+    )
+
+    if filters:
+        stmt = stmt.where(and_(*filters))
+
+    result = await db.execute(stmt)
+    checks = result.scalars().all()
+
+    if format == "json":
+        # Build JSON export
+        export_data = {"checks": []}
+
+        for check in checks:
+            model_name = (
+                check.model.custom_name or check.model.model_id if check.model else "Unknown"
+            )
+            provider = (
+                check.model.provider_account.provider_type
+                if check.model and check.model.provider_account
+                else "Unknown"
+            )
+            export_data["checks"].append(
+                {
+                    "model_name": model_name,
+                    "provider": provider,
+                    "status": check.status,
+                    "latency_ms": check.latency_ms,
+                    "error": check.error,
+                    "timestamp": check.created_at.isoformat() if check.created_at else None,
+                }
+            )
+
+        import json
+
+        content = json.dumps(export_data, indent=2)
+        media_type = "application/json"
+        filename = "uptime_history.json"
+    else:  # CSV format
+        import csv
+        from io import StringIO
+
+        output = StringIO()
+        writer = csv.DictWriter(
+            output,
+            fieldnames=[
+                "model_name",
+                "provider",
+                "status",
+                "latency_ms",
+                "error",
+                "timestamp",
+            ],
+        )
+        writer.writeheader()
+
+        for check in checks:
+            model_name = (
+                check.model.custom_name or check.model.model_id if check.model else "Unknown"
+            )
+            provider = (
+                check.model.provider_account.provider_type
+                if check.model and check.model.provider_account
+                else "Unknown"
+            )
+            writer.writerow(
+                {
+                    "model_name": model_name,
+                    "provider": provider,
+                    "status": check.status,
+                    "latency_ms": check.latency_ms or "",
+                    "error": check.error or "",
+                    "timestamp": check.created_at.isoformat() if check.created_at else "",
+                }
+            )
+
+        content = output.getvalue()
+        media_type = "text/csv; charset=utf-8"
+        filename = "uptime_history.csv"
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

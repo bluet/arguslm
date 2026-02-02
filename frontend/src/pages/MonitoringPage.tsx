@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Settings, Clock, RefreshCw, Check, X, AlertTriangle, Play, Save, Search, Activity } from 'lucide-react';
+import { Settings, Clock, RefreshCw, Check, X, AlertTriangle, Play, Save, Search, Activity, Download } from 'lucide-react';
 import { getConfig, updateConfig, triggerRun, getUptimeHistory } from '../api/monitoring';
 import { modelsApi } from '../api/models';
+import { exportUptimeHistory } from '../api/export';
 import { MonitoringConfig, UptimeCheck } from '../types/monitoring';
 import { Model } from '../types/model';
 
@@ -380,21 +381,39 @@ const MonitoringPage: React.FC = () => {
             <Clock className="w-5 h-5 text-gray-500" />
             <h2 className="text-xl font-semibold text-gray-800">Recent Uptime History</h2>
           </div>
-          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-            {(['all', 'up', 'down'] as const).map((filter) => (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+              {(['all', 'up', 'down'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setHistoryFilter(filter)}
+                  className={`
+                    px-3 py-1.5 text-sm font-medium rounded-md capitalize transition-all
+                    ${historyFilter === filter
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'}
+                  `}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
               <button
-                key={filter}
-                onClick={() => setHistoryFilter(filter)}
-                className={`
-                  px-3 py-1.5 text-sm font-medium rounded-md capitalize transition-all
-                  ${historyFilter === filter
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'}
-                `}
+                onClick={() => exportUptimeHistory('json').catch(err => console.error('Export failed:', err))}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
-                {filter}
+                <Download className="w-4 h-4" />
+                JSON
               </button>
-            ))}
+              <button
+                onClick={() => exportUptimeHistory('csv').catch(err => console.error('Export failed:', err))}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                CSV
+              </button>
+            </div>
           </div>
         </div>
 
