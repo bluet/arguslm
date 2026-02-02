@@ -1,13 +1,20 @@
 """Model entity representing LLM models from providers."""
 
+import re
 import uuid
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.benchmark import BenchmarkResult
+    from app.models.monitoring import UptimeCheck
+    from app.models.provider import ProviderAccount
 
 ModelSource = Literal["discovered", "manual"]
 
@@ -51,3 +58,72 @@ class Model(BaseModel):
             f"<Model(id={self.id}, model_id={self.model_id}, "
             f"display={display}, source={self.source})>"
         )
+
+
+async def create_manual_model(
+    db_session: AsyncSession,
+    provider_account_id: uuid.UUID,
+    model_id: str,
+    custom_name: str | None,
+    metadata: dict[str, Any],
+) -> Model:
+    """Create a manually added model.
+
+    Args:
+        db_session: Database session
+        provider_account_id: ID of the provider account
+        model_id: Model identifier (e.g., "custom-model-v1")
+        custom_name: Optional custom display name
+        metadata: Additional model metadata
+
+    Returns:
+        Created Model instance
+    """
+    model = Model(
+        provider_account_id=provider_account_id,
+        model_id=model_id,
+        custom_name=custom_name,
+        source="manual",
+        enabled_for_benchmark=True,
+        model_metadata=metadata,
+    )
+    db_session.add(model)
+    await db_session.commit()
+    await db_session.refresh(model)
+    return model
+
+
+async def update_custom_name(db_session: AsyncSession, model: Model, new_name: str | None) -> Model:
+    """Update the custom name of a model.
+
+    Args:
+        db_session: Database session
+        model: Model instance to update
+        new_name: New custom name (or None to clear)
+
+    Returns:
+        Updated Model instance
+    """
+    model.custom_name = new_name
+    await db_session.commit()
+    await db_session.refresh(model)
+    return model
+
+
+def validate_model_id(model_id: str) -> bool:
+    """Validate model ID format.
+
+    Model IDs must be non-empty, non-whitespace strings containing only
+    alphanumeric characters, hyphens, and underscores.
+
+    Args:
+        model_id: Model ID to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not model_id or not model_id.strip():
+        return False
+    # Allow alphanumeric, hyphens, and underscores
+    pattern = r"^[a-zA-Z0-9_-]+$"
+    return bool(re.match(pattern, model_id))
