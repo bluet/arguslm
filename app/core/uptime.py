@@ -1,9 +1,9 @@
 """Lightweight uptime health checks for LLM models."""
 
-import time
 from typing import TYPE_CHECKING
 
-from app.core.litellm_client import complete
+from app.core.litellm_client import LiteLLMClient
+from app.core.metrics import MetricsCollector, extract_chunk_content
 from app.models.monitoring import UptimeCheck
 
 if TYPE_CHECKING:
@@ -37,39 +37,53 @@ def _get_litellm_model_name(model: "Model") -> str:
     return model_id
 
 
+HEALTH_CHECK_PROMPT = "Count from 1 to 20, each number on a new line."
+
+
 async def check_uptime(model: "Model") -> UptimeCheck:
     """
-    Lightweight health check - NOT a full benchmark.
-    Uses minimal tokens to verify endpoint is responding.
+    Health check with TTFT and TPS metrics via streaming.
+    Uses a consistent prompt that elicits ~25-30 tokens for meaningful metrics.
 
     Args:
         model: Model instance to check (must have provider_account loaded)
 
     Returns:
-        UptimeCheck with status (up/down), latency_ms, and optional error message
+        UptimeCheck with status, latency_ms, ttft_ms, tps, output_tokens
     """
     provider_account = getattr(model, "provider_account", None)
     credentials = provider_account.credentials if provider_account else {}
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
 
-    start = time.perf_counter()
+    client = LiteLLMClient()
+    collector = MetricsCollector()
+    collector.start()
+
     try:
         litellm_model = _get_litellm_model_name(model)
-        response = await complete(
+        async for chunk in client.complete_stream(
             model=litellm_model,
-            messages=[{"role": "user", "content": "Hi"}],
-            max_tokens=10,
-            temperature=1,  # gpt-5 models only support temperature=1
-            timeout=10,
+            messages=[{"role": "user", "content": HEALTH_CHECK_PROMPT}],
+            max_tokens=100,
+            temperature=1,
+            timeout=15,
             api_key=api_key or "sk-not-needed",
             api_base=api_base,
-        )
-        latency = (time.perf_counter() - start) * 1000
+        ):
+            content = extract_chunk_content(chunk)
+            if content:
+                collector.record_token(content)
+
+        metrics = collector.finalize()
+
         return UptimeCheck(
             model_id=model.id,
             status="up",
-            latency_ms=latency,
+            latency_ms=metrics["total_latency_ms"],
+            ttft_ms=metrics["ttft_ms"],
+            tps=metrics["tps"],
+            output_tokens=metrics["output_tokens"],
         )
     except Exception as e:
         return UptimeCheck(
