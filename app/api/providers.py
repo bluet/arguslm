@@ -228,6 +228,12 @@ async def test_provider_connection(
             detail=f"Provider account {provider_id} not found",
         )
 
+    if not provider.provider_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provider type is missing or invalid",
+        )
+
     # Get credentials
     credentials = provider.credentials
     api_key = credentials.get("api_key")
@@ -300,6 +306,13 @@ async def refresh_provider_models(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Provider account {provider_id} not found",
+        )
+
+    # Validate provider_type is not None
+    if not provider.provider_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provider type is missing or invalid",
         )
 
     # Get appropriate model source

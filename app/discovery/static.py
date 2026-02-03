@@ -114,6 +114,8 @@ def get_source_for_provider(provider_type: str) -> "StaticModelSource | None":
     Returns:
         StaticModelSource if provider uses static registry, None otherwise.
     """
+    if not provider_type:
+        return None
     if provider_type in STATIC_REGISTRIES:
         return StaticModelSource(provider_type)
     return None
