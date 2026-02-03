@@ -17,6 +17,7 @@ from app.api.schemas.monitoring import (
     UptimeHistoryResponse,
 )
 from app.core.alert_evaluator import evaluate_alerts
+from app.core.scheduler import configure_scheduler
 from app.core.uptime import check_uptime
 from app.db.init import get_db
 from app.models.model import Model
@@ -94,6 +95,9 @@ async def update_monitoring_config(
 
     await db.commit()
     await db.refresh(config)
+
+    await configure_scheduler(config.interval_minutes, config.enabled)
+
     return MonitoringConfigResponse.model_validate(config)
 
 

@@ -9,13 +9,16 @@ from app.api.models import router as models_router
 from app.api.monitoring import router as monitoring_router
 from app.api.providers import router as providers_router
 from app.core.config import get_settings
+from app.core.scheduler import start_scheduler, stop_scheduler
 from app.db.init import init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    await start_scheduler()
     yield
+    await stop_scheduler()
 
 
 app = FastAPI(title="LLM Performance Monitor", version="0.1.0", lifespan=lifespan)
