@@ -60,6 +60,17 @@ export async function getModelCount(): Promise<number> {
 
 // Aggregation Helpers
 
+function aggregateByModel(checks: UptimeCheck[]): UptimeCheck[] {
+  const latestByModel = new Map<string, UptimeCheck>();
+  for (const check of checks) {
+    const existing = latestByModel.get(check.model_name);
+    if (!existing || new Date(check.created_at) > new Date(existing.created_at)) {
+      latestByModel.set(check.model_name, check);
+    }
+  }
+  return Array.from(latestByModel.values());
+}
+
 export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[], totalModels: number): DashboardStats {
   const modelsUp = uptimeChecks.filter(c => c.status === 'up').length;
   const modelsDown = uptimeChecks.filter(c => c.status === 'down').length;
@@ -174,13 +185,15 @@ export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert
 export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'): Promise<DashboardData> {
   const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
   
-  const [uptimeChecks, benchmarks, history, alerts, modelCount] = await Promise.all([
+  const [rawUptimeChecks, benchmarks, history, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
     getLatestBenchmarks(10),
     getBenchmarkHistory(days),
     getAlerts(true),
     getModelCount()
   ]);
+
+  const uptimeChecks = aggregateByModel(rawUptimeChecks);
 
   const stats = calculateStats(uptimeChecks, alerts, modelCount);
   const performanceHistory = await fetchBenchmarkPerformanceData(history);
