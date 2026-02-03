@@ -280,6 +280,88 @@ const DashboardPage: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+
+            {/* TTFT History Chart */}
+            <div className="h-[400px]">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TTFT History (ms)</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.ttftHistory}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="time" 
+                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    wrapperStyle={{ zIndex: 1000 }}
+                  />
+                  <Legend />
+                  {modelNames.map((modelName, index) => (
+                    <Line 
+                      key={modelName}
+                      type="monotone" 
+                      dataKey={modelName} 
+                      stroke={COLORS[index % COLORS.length]} 
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* TPS History Chart */}
+            <div className="h-[400px]">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TPS History (tokens/sec)</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.tpsHistory}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="time" 
+                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    wrapperStyle={{ zIndex: 1000 }}
+                  />
+                  <Legend />
+                  {modelNames.map((modelName, index) => (
+                    <Line 
+                      key={modelName}
+                      type="monotone" 
+                      dataKey={modelName} 
+                      stroke={COLORS[index % COLORS.length]} 
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

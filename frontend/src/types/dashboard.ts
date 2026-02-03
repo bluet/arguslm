@@ -42,6 +42,8 @@ export interface DashboardData {
   stats: DashboardStats;
   uptimeChecks: UptimeCheck[];
   performanceHistory: PerformanceMetric[];
+  ttftHistory: PerformanceMetric[];
+  tpsHistory: PerformanceMetric[];
   latencyComparison: LatencyMetric[];
   recentActivity: RecentActivityItem[];
 }

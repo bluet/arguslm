@@ -13,6 +13,9 @@ export interface UptimeCheck {
   model_name: string;
   status: 'up' | 'down' | 'degraded';
   latency_ms: number | null;
+  ttft_ms?: number | null;
+  tps?: number | null;
+  output_tokens?: number | null;
   error: string | null;
   created_at: string;
 }

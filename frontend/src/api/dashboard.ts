@@ -102,11 +102,12 @@ export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[], tot
  * Processes uptime checks into time-series data for charting.
  * Groups checks by minute and model to create multi-line chart data.
  */
-function processUptimeHistory(checks: UptimeCheck[]): PerformanceMetric[] {
+function processUptimeHistory(checks: UptimeCheck[], metric: 'latency_ms' | 'ttft_ms' | 'tps' = 'latency_ms'): PerformanceMetric[] {
   const groupedByTime = new Map<string, Record<string, number>>();
   
   checks.forEach(check => {
-    if (check.latency_ms === null) return;
+    const value = check[metric];
+    if (value === null || value === undefined) return;
     
     // Round to nearest minute to align points
     const date = new Date(check.created_at);
@@ -117,7 +118,7 @@ function processUptimeHistory(checks: UptimeCheck[]): PerformanceMetric[] {
       groupedByTime.set(timeKey, {});
     }
     
-    groupedByTime.get(timeKey)![check.model_name] = check.latency_ms;
+    groupedByTime.get(timeKey)![check.model_name] = value;
   });
   
   return Array.from(groupedByTime.entries())
@@ -193,7 +194,9 @@ export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'):
   const uptimeChecks = aggregateByModel(rawUptimeChecks);
 
   const stats = calculateStats(uptimeChecks, alerts, modelCount);
-  const performanceHistory = processUptimeHistory(uptimeHistory);
+  const performanceHistory = processUptimeHistory(uptimeHistory, 'latency_ms');
+  const ttftHistory = processUptimeHistory(uptimeHistory, 'ttft_ms');
+  const tpsHistory = processUptimeHistory(uptimeHistory, 'tps');
   const latencyComparison = processLatencyComparison(uptimeChecks);
   const recentActivity = generateRecentActivity(benchmarks, alerts, uptimeChecks);
 
@@ -201,6 +204,8 @@ export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'):
     stats,
     uptimeChecks,
     performanceHistory,
+    ttftHistory,
+    tpsHistory,
     latencyComparison,
     recentActivity
   };
