@@ -73,7 +73,7 @@ const DashboardPage: React.FC = () => {
 
   if (loading && !data) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -81,7 +81,7 @@ const DashboardPage: React.FC = () => {
 
   if (error && !data) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="text-red-500 flex items-center gap-2">
           <AlertCircle size={24} />
           <span>{error}</span>
@@ -96,18 +96,18 @@ const DashboardPage: React.FC = () => {
   ));
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 transition-colors duration-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Last updated: {lastRefresh.toLocaleTimeString()}
           </p>
         </div>
         <button 
           onClick={fetchData}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:bg-gray-950 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors shadow-sm"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -117,67 +117,67 @@ const DashboardPage: React.FC = () => {
       {/* Section 1: Status Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total Models */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Models</p>
-              <h3 className="text-3xl font-bold text-gray-900 mt-2">{data?.stats.totalModels || 0}</h3>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Models</p>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{data?.stats.totalModels || 0}</h3>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
               <Server size={24} />
             </div>
           </div>
         </div>
 
         {/* Models Status */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-500">Model Health</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Model Health</p>
               <div className="flex gap-3 mt-2">
-                <div className="flex items-center gap-1 text-green-600">
+                <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                   <CheckCircle size={16} />
                   <span className="font-bold text-xl">{data?.stats.modelsUp || 0}</span>
                 </div>
-                <div className="flex items-center gap-1 text-red-600">
+                <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
                   <XCircle size={16} />
                   <span className="font-bold text-xl">{data?.stats.modelsDown || 0}</span>
                 </div>
-                <div className="flex items-center gap-1 text-yellow-600">
+                <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                   <AlertTriangle size={16} />
                   <span className="font-bold text-xl">{data?.stats.modelsDegraded || 0}</span>
                 </div>
               </div>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg text-green-600">
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
               <Activity size={24} />
             </div>
           </div>
         </div>
 
         {/* Last Check */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-500">Last Check</p>
-              <h3 className="text-xl font-bold text-gray-900 mt-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Last Check</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-2">
                 {data?.stats.lastCheck ? formatRelativeTime(data.stats.lastCheck) : 'Never'}
               </h3>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
               <Clock size={24} />
             </div>
           </div>
         </div>
 
         {/* Alerts */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-500">Active Alerts</p>
-              <h3 className="text-3xl font-bold text-gray-900 mt-2">{data?.stats.unacknowledgedAlerts || 0}</h3>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Alerts</p>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{data?.stats.unacknowledgedAlerts || 0}</h3>
             </div>
-            <div className={`p-3 rounded-lg ${(data?.stats.unacknowledgedAlerts || 0) > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400'}`}>
+            <div className={`p-3 rounded-lg ${(data?.stats.unacknowledgedAlerts || 0) > 0 ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-gray-50 dark:bg-gray-950 text-gray-400 dark:text-gray-500'}`}>
               <AlertCircle size={24} />
             </div>
           </div>
@@ -186,29 +186,29 @@ const DashboardPage: React.FC = () => {
 
       {/* Section 2: Uptime Grid */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Model Status</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Model Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {data?.uptimeChecks.map((check) => (
-            <div key={check.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div key={check.id} className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="font-medium text-gray-900 truncate pr-2" title={check.model_name}>
+                <h3 className="font-medium text-gray-900 dark:text-white truncate pr-2" title={check.model_name}>
                   {check.model_name}
                 </h3>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  check.status === 'up' ? 'bg-green-100 text-green-700' :
-                  check.status === 'down' ? 'bg-red-100 text-red-700' :
-                  'bg-yellow-100 text-yellow-700'
+                  check.status === 'up' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                  check.status === 'down' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                  'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                 }`}>
                   {check.status.toUpperCase()}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>Latency</span>
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
                   {check.latency_ms ? `${Math.round(check.latency_ms)}ms` : '-'}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500 mt-1">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>Checked</span>
                 <span>{formatTime(check.created_at)}</span>
               </div>
@@ -219,18 +219,18 @@ const DashboardPage: React.FC = () => {
 
       {/* Section 3: Performance Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Performance Trends</h2>
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Trends</h2>
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
               {(['24h', '7d', '30d'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                     timeRange === range 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   {range}
@@ -242,7 +242,7 @@ const DashboardPage: React.FC = () => {
           <div className="space-y-8">
             {/* Latency History Chart */}
             <div className="h-[400px]">
-              <h3 className="text-sm font-medium text-gray-500 mb-4">Latency History (ms)</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Latency History (ms)</h3>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.performanceHistory}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -286,8 +286,8 @@ const DashboardPage: React.FC = () => {
         {/* Right Column: Latency Bar Chart & Recent Activity */}
         <div className="space-y-6">
           {/* Latency Comparison */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Latency by Model</h2>
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Latency by Model</h2>
             <div className="h-[300px]">
               {data?.latencyComparison && data.latencyComparison.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -318,7 +318,7 @@ const DashboardPage: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
+                <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
                   <p>No latency data available</p>
                 </div>
               )}
@@ -326,26 +326,26 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex-1">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
             <div className="space-y-4">
               {data?.recentActivity.map((item) => (
                 <div key={item.id} className="flex gap-3 items-start">
                   <div className={`mt-1 p-1.5 rounded-full flex-shrink-0 ${
-                    item.status === 'success' ? 'bg-green-100 text-green-600' :
-                    item.status === 'failure' ? 'bg-red-100 text-red-600' :
-                    item.status === 'warning' ? 'bg-yellow-100 text-yellow-600' :
-                    'bg-blue-100 text-blue-600'
+                    item.status === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                    item.status === 'failure' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                    item.status === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
+                    'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                   }`}>
                     {item.type === 'benchmark' ? <TrendingUp size={14} /> :
                      item.type === 'alert' ? <AlertCircle size={14} /> :
                      <Activity size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{item.message}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.message}</p>
                     <div className="flex justify-between items-center mt-0.5">
-                      <p className="text-xs text-gray-500 truncate">{item.model_name}</p>
-                      <p className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.model_name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap ml-2">
                         {formatRelativeTime(item.timestamp)}
                       </p>
                     </div>
@@ -353,7 +353,7 @@ const DashboardPage: React.FC = () => {
                 </div>
               ))}
               {(!data?.recentActivity || data.recentActivity.length === 0) && (
-                <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No recent activity</p>
               )}
             </div>
           </div>

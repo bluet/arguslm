@@ -78,7 +78,7 @@ export default function BenchmarksPage() {
 
    const loadModels = async () => {
      try {
-       const data = await modelsApi.listModels({ enabled_for_benchmark: true });
+       const data = await modelsApi.listAllModels({ enabled_for_benchmark: true });
        setModels(data);
        
        if (data.length > 0) {
