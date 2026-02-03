@@ -116,7 +116,8 @@ async def run_benchmark(config: BenchmarkConfig) -> list[BenchmarkResult]:
         if model_key not in semaphores["model"]:
             semaphores["model"][model_key] = asyncio.Semaphore(throttle.per_model_concurrency)
 
-        for run_idx in range(config.num_runs):
+        total_runs = config.warmup_runs + config.num_runs
+        for run_idx in range(total_runs):
             is_warmup = run_idx < config.warmup_runs
             task = asyncio.create_task(
                 benchmark_single_model(
@@ -158,6 +159,11 @@ async def benchmark_single_model(
     model_key = str(model.id)
     client = LiteLLMClient()
 
+    provider_account = getattr(model, "provider_account", None)
+    credentials = provider_account.credentials if provider_account else {}
+    api_key = credentials.get("api_key")
+    api_base = credentials.get("base_url")
+
     async with (
         semaphores["global"],
         semaphores["provider"][provider_key],
@@ -173,6 +179,8 @@ async def benchmark_single_model(
                 model=model.model_id,
                 messages=[{"role": "user", "content": prompt_pack}],
                 max_tokens=max_tokens,
+                api_key=api_key,
+                api_base=api_base,
             )
 
             async for chunk in stream:

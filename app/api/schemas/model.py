@@ -58,6 +58,7 @@ class ModelResponse(BaseModel):
 
     id: UUID = Field(..., description="Model ID")
     provider_account_id: UUID = Field(..., description="Provider account ID")
+    provider_name: Optional[str] = Field(None, description="Provider display name")
     model_id: str = Field(..., description="Model identifier")
     custom_name: Optional[str] = Field(None, description="Custom display name")
     source: str = Field(..., description="Source of the model (discovered or manual)")

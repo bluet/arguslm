@@ -2,6 +2,13 @@ import { Model, ModelFilters, CreateModelData, UpdateModelData } from '../types/
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
+interface ModelListResponse {
+  items: Model[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -21,7 +28,8 @@ export const modelsApi = {
     if (params.offset) searchParams.append('offset', String(params.offset));
 
     const response = await fetch(`${API_BASE_URL}/models?${searchParams.toString()}`);
-    return handleResponse<Model[]>(response);
+    const data = await handleResponse<ModelListResponse>(response);
+    return data.items;
   },
 
   getModel: async (id: string): Promise<Model> => {

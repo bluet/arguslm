@@ -13,6 +13,7 @@ services:
       PYTHONDONTWRITEBYTECODE: "1"
       DATABASE_URL: "postgresql+asyncpg://${DB_USER:-arguslm}:${DB_PASSWORD:-arguslm_password}@db:5432/${DB_NAME:-arguslm}"
       SECRET_KEY: "${SECRET_KEY:-dev-secret-key-change-in-production}"
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:-bcbB3Rh52iJ6VFYeo0VuSGyghHiLvRpsbq8h8zq7eWY=}"
       LITELLM_LOG_LEVEL: "${LITELLM_LOG_LEVEL:-INFO}"
     volumes:
       - ./app:/app/app

@@ -6,6 +6,13 @@ import {
   CreateBenchmarkData 
 } from '../types/benchmark';
 
+interface BenchmarkListResponse {
+  runs: BenchmarkRun[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
 export const benchmarksApi = {
   listBenchmarks: async (params: BenchmarkFilters = {}): Promise<BenchmarkRun[]> => {
     const searchParams = new URLSearchParams();
@@ -16,7 +23,8 @@ export const benchmarksApi = {
     const queryString = searchParams.toString();
     const path = queryString ? `/benchmarks?${queryString}` : '/benchmarks';
     
-    return apiGet<BenchmarkRun[]>(path);
+    const response = await apiGet<BenchmarkListResponse>(path);
+    return response.runs;
   },
 
   getBenchmark: async (id: string): Promise<BenchmarkRun> => {

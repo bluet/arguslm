@@ -191,7 +191,7 @@ export const ModelsPage = () => {
                       <div className="text-xs text-gray-500 mt-0.5 font-mono">{model.model_id}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline">{model.provider_account_id}</Badge>
+                      <Badge variant="outline">{model.provider_name || model.provider_account_id}</Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant={model.source === 'manual' ? 'secondary' : 'outline'}>

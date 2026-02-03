@@ -1,6 +1,7 @@
 export interface Model {
   id: string;
   provider_account_id: string;
+  provider_name: string | null;
   model_id: string;
   custom_name: string | null;
   source: 'discovered' | 'manual';

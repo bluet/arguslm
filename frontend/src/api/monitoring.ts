@@ -13,6 +13,13 @@ export const triggerRun = async (): Promise<{ message: string; run_id: string }>
   return apiPost<{ message: string; run_id: string }>('/monitoring/run');
 };
 
+interface UptimeListResponse {
+  items: UptimeCheck[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export const getUptimeHistory = async (params?: {
   limit?: number;
   status?: string;
@@ -26,7 +33,8 @@ export const getUptimeHistory = async (params?: {
   const queryString = queryParams.toString();
   const path = `/monitoring/uptime${queryString ? `?${queryString}` : ''}`;
   
-  return apiGet<UptimeCheck[]>(path);
+  const response = await apiGet<UptimeListResponse>(path);
+  return response.items;
 };
 
 export const getMonitoredModels = async (): Promise<MonitoringModelConfig[]> => {

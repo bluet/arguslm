@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.schemas.model import ModelCreate, ModelListResponse, ModelResponse, ModelUpdate
 from app.db.init import get_db
@@ -70,16 +71,25 @@ async def list_models(
 
     total = await db.scalar(count_query)
 
-    # Apply pagination
-    query = query.offset(offset).limit(limit)
+    # Apply pagination and eager load provider_account
+    query = query.options(selectinload(Model.provider_account)).offset(offset).limit(limit)
 
     # Execute query
     result = await db.execute(query)
     models = result.scalars().all()
 
+    items = []
+    for m in models:
+        model_data = ModelResponse.model_validate(m)
+        if m.provider_account:
+            model_data.provider_name = (
+                m.provider_account.display_name or m.provider_account.provider_type
+            )
+        items.append(model_data)
+
     return ModelListResponse(
-        items=[ModelResponse.model_validate(m) for m in models],
-        total=total,
+        items=items,
+        total=total or 0,
         limit=limit,
         offset=offset,
     )
@@ -91,14 +101,19 @@ async def get_model(
     db: AsyncSession = Depends(get_db),
 ) -> ModelResponse:
     """Get a specific model by ID."""
-    query = select(Model).where(Model.id == model_id)
+    query = select(Model).where(Model.id == model_id).options(selectinload(Model.provider_account))
     result = await db.execute(query)
     model = result.scalar_one_or_none()
 
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
 
-    return ModelResponse.model_validate(model)
+    response = ModelResponse.model_validate(model)
+    if model.provider_account:
+        response.provider_name = (
+            model.provider_account.display_name or model.provider_account.provider_type
+        )
+    return response
 
 
 @router.patch("/{model_id}", response_model=ModelResponse)

@@ -34,7 +34,7 @@ const MonitoringPage: React.FC = () => {
     try {
       const [configData, modelsData, historyData] = await Promise.all([
         getConfig(),
-        modelsApi.listModels({ limit: 1000 }), // Fetch all models
+        modelsApi.listModels({ limit: 200 }),
         getUptimeHistory({ limit: 50 })
       ]);
 
@@ -145,7 +145,7 @@ const MonitoringPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to bulk update models:', error);
       // Revert is complex here, simpler to just refetch
-      const modelsData = await modelsApi.listModels({ limit: 1000 });
+      const modelsData = await modelsApi.listModels({ limit: 200 });
       setModels(modelsData);
     }
   };

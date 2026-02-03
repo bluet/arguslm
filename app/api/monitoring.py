@@ -97,33 +97,40 @@ async def update_monitoring_config(
     return MonitoringConfigResponse.model_validate(config)
 
 
-async def run_uptime_checks(db: AsyncSession) -> None:
+async def run_uptime_checks_task() -> None:
     """Background task to run uptime checks for all enabled models."""
-    # Get all models with monitoring enabled
-    stmt = select(Model).where(Model.enabled_for_monitoring == True)
-    result = await db.execute(stmt)
-    models = result.scalars().all()
+    from app.db.init import AsyncSessionLocal
 
-    # Run checks for each model and collect results
-    uptime_checks: list[UptimeCheck] = []
-    for model in models:
-        uptime_check = await check_uptime(model)
-        db.add(uptime_check)
-        uptime_checks.append(uptime_check)
+    async with AsyncSessionLocal() as db:
+        try:
+            stmt = (
+                select(Model)
+                .where(Model.enabled_for_monitoring == True)
+                .options(selectinload(Model.provider_account))
+            )
+            result = await db.execute(stmt)
+            models = result.scalars().all()
 
-    # Evaluate alert rules against uptime results
-    await evaluate_alerts(db, uptime_checks)
+            uptime_checks: list[UptimeCheck] = []
+            for model in models:
+                uptime_check = await check_uptime(model)
+                db.add(uptime_check)
+                uptime_checks.append(uptime_check)
 
-    # Update last_run_at
-    config = await get_or_create_default_config(db)
-    config.last_run_at = datetime.now(datetime.now().astimezone().tzinfo)
-    await db.commit()
+            await evaluate_alerts(db, uptime_checks)
+
+            config = await get_or_create_default_config(db)
+            config.last_run_at = datetime.now(datetime.now().astimezone().tzinfo)
+            await db.commit()
+        except Exception as e:
+            import logging
+
+            logging.error(f"Uptime check failed: {e}")
 
 
 @router.post("/run", response_model=MonitoringRunResponse)
 async def trigger_monitoring_run(
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
 ) -> MonitoringRunResponse:
     """Trigger manual monitoring run.
 
@@ -131,7 +138,7 @@ async def trigger_monitoring_run(
     Returns immediately; checks run in background.
     """
     run_id = str(uuid.uuid4())
-    background_tasks.add_task(run_uptime_checks, db)
+    background_tasks.add_task(run_uptime_checks_task)
 
     return MonitoringRunResponse(
         run_id=run_id,
@@ -177,10 +184,9 @@ async def get_uptime_history(
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0
 
-    # Get paginated results with model info
     stmt = (
         select(UptimeCheck)
-        .outerjoin(Model)
+        .options(selectinload(UptimeCheck.model))
         .order_by(desc(UptimeCheck.created_at))
         .limit(limit)
         .offset(offset)

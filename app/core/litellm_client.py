@@ -320,13 +320,13 @@ class LiteLLMClient:
             except Exception as e:
                 # Catch unexpected errors
                 logger.error(f"Unexpected error for model {config.model}: {e}")
-                raise APIError(f"Unexpected error: {e}")
+                raise RuntimeError(f"Unexpected error: {e}") from e
 
         # If we exhausted all retries, raise the last exception
         if last_exception:
             raise last_exception
 
-        raise APIError("Completion failed after all retry attempts")
+        raise RuntimeError(f"Completion failed after all retry attempts for model {config.model}")
 
     async def _execute_stream_with_retry(
         self,
@@ -388,13 +388,13 @@ class LiteLLMClient:
 
             except Exception as e:
                 logger.error(f"Unexpected streaming error for model {config.model}: {e}")
-                raise APIError(f"Unexpected streaming error: {e}")
+                raise RuntimeError(f"Unexpected streaming error: {e}") from e
 
         # If we exhausted all retries, raise the last exception
         if last_exception:
             raise last_exception
 
-        raise APIError("Streaming failed after all retry attempts")
+        raise RuntimeError(f"Streaming failed after all retry attempts for model {config.model}")
 
 
 # Convenience function for quick usage

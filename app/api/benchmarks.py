@@ -193,8 +193,11 @@ async def create_benchmark(
     Creates a benchmark run record and starts execution in background.
     Returns immediately with the run ID and pending status.
     """
-    # Validate model_ids exist
-    model_result = await db.execute(select(Model).where(Model.id.in_(benchmark.model_ids)))
+    model_result = await db.execute(
+        select(Model)
+        .where(Model.id.in_(benchmark.model_ids))
+        .options(selectinload(Model.provider_account))
+    )
     models = model_result.scalars().all()
 
     if len(models) != len(benchmark.model_ids):

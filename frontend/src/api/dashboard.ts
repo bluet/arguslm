@@ -3,24 +3,47 @@ import { UptimeCheck } from '../types/monitoring';
 import { BenchmarkRun } from '../types/benchmark';
 import { Alert, DashboardStats, PerformanceMetric, LatencyMetric, RecentActivityItem, DashboardData } from '../types/dashboard';
 
-// API Functions
+interface UptimeListResponse {
+  items: UptimeCheck[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+interface BenchmarkListResponse {
+  runs: BenchmarkRun[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+interface AlertListResponse {
+  items: Alert[];
+  unacknowledged_count: number;
+  limit: number;
+  offset: number;
+}
 
 export async function getUptimeChecks(): Promise<UptimeCheck[]> {
-  return apiGet<UptimeCheck[]>('/monitoring/uptime');
+  const response = await apiGet<UptimeListResponse>('/monitoring/uptime');
+  return response.items;
 }
 
 export async function getLatestBenchmarks(limit: number = 5): Promise<BenchmarkRun[]> {
-  return apiGet<BenchmarkRun[]>(`/benchmarks?limit=${limit}`);
+  const response = await apiGet<BenchmarkListResponse>(`/benchmarks?limit=${limit}`);
+  return response.runs;
 }
 
 export async function getAlerts(unacknowledgedOnly: boolean = true): Promise<Alert[]> {
   const query = unacknowledgedOnly ? '?acknowledged=false' : '';
-  return apiGet<Alert[]>(`/alerts${query}`);
+  const response = await apiGet<AlertListResponse>(`/alerts${query}`);
+  return response.items;
 }
 
 export async function getBenchmarkHistory(days: number = 1): Promise<BenchmarkRun[]> {
   const limit = days * 24; 
-  return apiGet<BenchmarkRun[]>(`/benchmarks?limit=${limit * 5}`); 
+  const response = await apiGet<BenchmarkListResponse>(`/benchmarks?limit=${limit * 5}`);
+  return response.runs;
 }
 
 // Aggregation Helpers
