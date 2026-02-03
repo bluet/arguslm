@@ -355,7 +355,9 @@ const MonitoringPage: React.FC = () => {
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {model.custom_name || model.model_id}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">{model.model_id}</p>
+                      {model.custom_name && (
+                        <p className="text-xs text-gray-500 truncate">{model.model_id}</p>
+                      )}
                     </div>
                     <button
                       onClick={() => handleToggleModel(model.id, !model.enabled_for_monitoring)}
