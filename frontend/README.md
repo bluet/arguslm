@@ -1,6 +1,6 @@
-# LLM-Perf-Mon Frontend
+# ArgusLM Frontend
 
-This is the React-based frontend for the LLM Performance Monitoring tool.
+This is the React-based frontend for ArgusLM - the hundred-eyed watcher for your LLM providers.
 
 ## 🚀 Getting Started
 

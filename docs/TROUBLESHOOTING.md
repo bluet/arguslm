@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This document covers common issues you might encounter while using LLM-Perf-Mon and how to resolve them.
+This document covers common issues you might encounter while using ArgusLM and how to resolve them.
 
 ## Common Issues
 
@@ -49,7 +49,7 @@ Logs are printed to the standard output of the terminal where you started the `u
 
 ### SQLite (Local)
 1. Stop the application.
-2. Delete the `llm_perf_mon.db` file in the project root.
+2. Delete the `arguslm.db` file in the project root.
 3. Run `alembic upgrade head` to recreate the schema.
 
 ### Docker Compose
@@ -65,5 +65,5 @@ Logs are printed to the standard output of the terminal where you started the `u
 ## Getting Help
 
 If you encounter an issue not covered here, please:
-1. Check the [GitHub Issues](https://github.com/your-repo/llm-perf-mon/issues) for similar problems.
+1. Check the [GitHub Issues](https://github.com/bluet/arguslm/issues) for similar problems.
 2. Open a new issue with detailed steps to reproduce and relevant log output.

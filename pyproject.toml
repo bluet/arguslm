@@ -3,9 +3,24 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "llm-perf-mon"
+name = "arguslm"
 version = "0.1.0"
-description = "LLM Performance Monitoring System"
+description = "ArgusLM - The hundred-eyed watcher for your LLM providers"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "Matthew Lien", email = "bluet@bluet.org"}]
+keywords = ["llm", "benchmark", "monitoring", "performance", "litellm", "openai", "anthropic"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Monitoring",
+]
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",
@@ -28,6 +43,12 @@ dev = [
     "mypy>=1.8.0",
     "httpx>=0.26.0",
 ]
+
+[project.urls]
+Homepage = "https://arguslm.com"
+Documentation = "https://github.com/bluet/arguslm#readme"
+Repository = "https://github.com/bluet/arguslm"
+Issues = "https://github.com/bluet/arguslm/issues"
 
 [tool.setuptools]
 packages = ["app"]

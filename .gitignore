@@ -70,3 +70,6 @@ dist-ssr/
 # Logs
 logs/
 *.log
+
+# IDE/Tool specific
+.sisyphus/

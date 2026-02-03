@@ -5,13 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: llm-perf-mon-backend
+    container_name: arguslm-backend
     ports:
       - "8000:8000"
     environment:
       PYTHONUNBUFFERED: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      DATABASE_URL: "postgresql+asyncpg://${DB_USER:-llm_user}:${DB_PASSWORD:-llm_password}@db:5432/${DB_NAME:-llm_perf_mon}"
+      DATABASE_URL: "postgresql+asyncpg://${DB_USER:-arguslm}:${DB_PASSWORD:-arguslm_password}@db:5432/${DB_NAME:-arguslm}"
       SECRET_KEY: "${SECRET_KEY:-dev-secret-key-change-in-production}"
       LITELLM_LOG_LEVEL: "${LITELLM_LOG_LEVEL:-INFO}"
     volumes:
@@ -27,13 +27,13 @@ services:
     depends_on:
       - db
     networks:
-      - llm-perf-mon-network
+      - arguslm-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: llm-perf-mon-frontend
+    container_name: arguslm-frontend
     ports:
       - "3000:80"
     environment:
@@ -47,31 +47,31 @@ services:
     depends_on:
       - backend
     networks:
-      - llm-perf-mon-network
+      - arguslm-network
 
   db:
     image: postgres:16-alpine
-    container_name: llm-perf-mon-db
+    container_name: arguslm-db
     environment:
-      POSTGRES_USER: "${DB_USER:-llm_user}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-llm_password}"
-      POSTGRES_DB: "${DB_NAME:-llm_perf_mon}"
+      POSTGRES_USER: "${DB_USER:-arguslm}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-arguslm_password}"
+      POSTGRES_DB: "${DB_NAME:-arguslm}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-llm_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-arguslm}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - llm-perf-mon-network
+      - arguslm-network
 
 volumes:
   backend_data:
   postgres_data:
 
 networks:
-  llm-perf-mon-network:
+  arguslm-network:
     driver: bridge

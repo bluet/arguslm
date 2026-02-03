@@ -36,7 +36,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Activity className="w-6 h-6 text-blue-500" />
-              <span className="text-lg font-bold tracking-tight text-white">LLM Perf Mon</span>
+              <span className="text-lg font-bold tracking-tight text-white">ArgusLM</span>
             </div>
             <NotificationBell />
           </div>

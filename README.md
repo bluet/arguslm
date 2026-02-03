@@ -1,6 +1,10 @@
-# LLM-Perf-Mon: LLM Performance Benchmarking & Monitoring Tool
+# ArgusLM
 
-LLM-Perf-Mon is a comprehensive, self-hosted tool designed to benchmark and monitor the performance of Large Language Models (LLMs) across 100+ providers. Built on top of [LiteLLM](https://github.com/BerriAI/litellm), it provides a unified interface to track uptime, Time to First Token (TTFT), and Tokens Per Second (TPS) for both local and remote LLM endpoints.
+**The hundred-eyed watcher for your LLM providers.**
+
+ArgusLM is a comprehensive, self-hosted tool designed to benchmark and monitor the performance of Large Language Models (LLMs) across 100+ providers. Built on top of [LiteLLM](https://github.com/BerriAI/litellm), it provides a unified interface to track uptime, Time to First Token (TTFT), and Tokens Per Second (TPS) for both local and remote LLM endpoints.
+
+> *In Greek mythology, Argus Panoptes was a giant with a hundred eyes. ArgusLM watches over your hundred providers.*
 
 ## 🚀 Features
 
@@ -30,8 +34,8 @@ The easiest way to get started is using Docker Compose, which sets up the backen
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo/llm-perf-mon.git
-   cd llm-perf-mon
+   git clone https://github.com/bluet/arguslm.git
+   cd arguslm
    ```
 
 2. **Start the services**:
@@ -81,10 +85,10 @@ The easiest way to get started is using Docker Compose, which sets up the backen
 
 ## ⚙️ Configuration
 
-LLM-Perf-Mon can be configured using environment variables. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for a full reference.
+ArgusLM can be configured using environment variables. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for a full reference.
 
 Key variables:
-- `DATABASE_URL`: Database connection string (default: `sqlite+aiosqlite:///./llm_perf_mon.db`)
+- `DATABASE_URL`: Database connection string (default: `sqlite+aiosqlite:///./arguslm.db`)
 - `SECRET_KEY`: Secret key for encryption and security.
 - `ENCRYPTION_KEY`: Key used to encrypt provider credentials at rest.
 
@@ -100,4 +104,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+---
+
+*Named after Argus Panoptes, the all-seeing giant of Greek mythology who had a hundred eyes.*

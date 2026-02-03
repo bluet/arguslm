@@ -1,4 +1,4 @@
-"""End-to-End tests for complete user flows through the LLM-Perf-Mon API.
+"""End-to-End tests for complete user flows through the ArgusLM API.
 
 Tests cover three main user journeys:
 1. Provider → Models → Benchmark

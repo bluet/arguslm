@@ -1,15 +1,15 @@
 # Configuration Reference
 
-LLM-Perf-Mon is configured primarily through environment variables. This document provides a comprehensive list of available settings and guidance on how to configure various LLM providers.
+ArgusLM is configured primarily through environment variables. This document provides a comprehensive list of available settings and guidance on how to configure various LLM providers.
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | Database connection string. Supports SQLite and PostgreSQL. | `sqlite+aiosqlite:///./llm_perf_mon.db` |
+| `DATABASE_URL` | Database connection string. Supports SQLite and PostgreSQL. | `sqlite+aiosqlite:///./arguslm.db` |
 | `ENCRYPTION_KEY` | **Required.** Base64-encoded Fernet key for encrypting credentials at rest. | None |
 | `SECRET_KEY` | Secret key for session security and internal signing. | `dev-secret-key` |
-| `API_TITLE` | Title shown in the API documentation. | `LLM Performance Monitoring API` |
+| `API_TITLE` | Title shown in the API documentation. | `ArgusLM API` |
 | `CORS_ORIGINS` | Comma-separated list of allowed CORS origins. | `http://localhost:5173,http://localhost:3000` |
 | `LITELLM_LOG_LEVEL` | Logging level for the LiteLLM library. | `INFO` |
 

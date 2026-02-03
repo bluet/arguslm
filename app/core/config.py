@@ -16,14 +16,14 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_url: str = "sqlite+aiosqlite:///./llm_perf_mon.db"
+    database_url: str = "sqlite+aiosqlite:///./arguslm.db"
     database_echo: bool = False
 
     # Security
     encryption_key: str = ""
 
     # API
-    api_title: str = "LLM Performance Monitoring API"
+    api_title: str = "ArgusLM API"
     api_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
 
