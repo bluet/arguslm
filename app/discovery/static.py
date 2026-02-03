@@ -16,10 +16,33 @@ logger = logging.getLogger(__name__)
 
 # Curated model registries by provider type
 # Ref: Official pricing/model pages for each provider
+# Updated: 2025-02 from https://platform.claude.com/docs/en/api
 ANTHROPIC_MODELS: list[dict] = [
+    # Claude 4.5 series (latest flagship)
+    {"id": "claude-opus-4-5-20251101", "owned_by": "anthropic"},
+    {"id": "claude-sonnet-4-5-20250929", "owned_by": "anthropic"},
+    {"id": "claude-haiku-4-5-20251001", "owned_by": "anthropic"},
+    # Claude 4.5 aliases (point to latest dated version)
+    {"id": "claude-opus-4-5", "owned_by": "anthropic"},
+    {"id": "claude-sonnet-4-5", "owned_by": "anthropic"},
+    {"id": "claude-haiku-4-5", "owned_by": "anthropic"},
+    # Claude 4.1 series
+    {"id": "claude-opus-4-1-20250805", "owned_by": "anthropic"},
+    # Claude 4.0 series
+    {"id": "claude-opus-4-0", "owned_by": "anthropic"},
+    {"id": "claude-opus-4-20250514", "owned_by": "anthropic"},
+    {"id": "claude-sonnet-4-0", "owned_by": "anthropic"},
+    {"id": "claude-sonnet-4-20250514", "owned_by": "anthropic"},
+    # Claude 3.7 series (extended thinking)
+    {"id": "claude-3-7-sonnet-20250219", "owned_by": "anthropic"},
+    {"id": "claude-3-7-sonnet-latest", "owned_by": "anthropic"},
+    # Claude 3.5 series
     {"id": "claude-3-5-sonnet-20241022", "owned_by": "anthropic"},
     {"id": "claude-3-5-haiku-20241022", "owned_by": "anthropic"},
+    {"id": "claude-3-5-haiku-latest", "owned_by": "anthropic"},
+    # Claude 3 series (legacy)
     {"id": "claude-3-opus-20240229", "owned_by": "anthropic"},
+    {"id": "claude-3-opus-latest", "owned_by": "anthropic"},
     {"id": "claude-3-sonnet-20240229", "owned_by": "anthropic"},
     {"id": "claude-3-haiku-20240307", "owned_by": "anthropic"},
 ]

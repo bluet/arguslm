@@ -59,9 +59,9 @@ def test_models_registry_anthropic_models():
     assert len(anthropic_models) >= 3, "Should have at least 3 Anthropic models"
 
     model_ids = {m["id"] for m in anthropic_models}
-    assert "claude-3-5-sonnet-20241022" in model_ids, "Missing Claude 3.5 Sonnet"
-    assert "claude-3-5-haiku-20241022" in model_ids, "Missing Claude 3.5 Haiku"
-    assert "claude-3-opus-20250219" in model_ids, "Missing Claude 3 Opus"
+    assert "claude-opus-4-5-20251101" in model_ids, "Missing Claude 4.5 Opus"
+    assert "claude-sonnet-4-5-20250929" in model_ids, "Missing Claude 4.5 Sonnet"
+    assert "claude-haiku-4-5-20251001" in model_ids, "Missing Claude 4.5 Haiku"
 
 
 def test_models_registry_mistral_models():

@@ -309,8 +309,8 @@ class TestStaticModelSource:
 
         assert len(models) == len(ANTHROPIC_MODELS)
         model_ids = [m.id for m in models]
-        assert "claude-3-5-sonnet-20241022" in model_ids
-        assert "claude-3-opus-20240229" in model_ids
+        assert "claude-opus-4-5-20251101" in model_ids
+        assert "claude-sonnet-4-5-20250929" in model_ids
         assert all(m.provider_type == "anthropic" for m in models)
         assert all(m.owned_by == "anthropic" for m in models)
 

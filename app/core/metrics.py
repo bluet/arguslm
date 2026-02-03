@@ -29,17 +29,36 @@ MODEL_PRICING = {
     "gpt-4-turbo": {"input": 10.00, "output": 30.00},
     "gpt-4": {"input": 30.00, "output": 60.00},
     "gpt-3.5-turbo": {"input": 0.50, "output": 1.50},
-    # Anthropic
+    # Anthropic Claude 4.5 (https://platform.claude.com/docs/en/about-claude/pricing)
+    "claude-opus-4-5-20251101": {"input": 5.00, "output": 25.00},
+    "claude-opus-4-5": {"input": 5.00, "output": 25.00},
+    "claude-sonnet-4-5-20250929": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4-5": {"input": 3.00, "output": 15.00},
+    "claude-haiku-4-5-20251001": {"input": 1.00, "output": 5.00},
+    "claude-haiku-4-5": {"input": 1.00, "output": 5.00},
+    # Anthropic Claude 4.x
+    "claude-opus-4-1-20250805": {"input": 15.00, "output": 75.00},
+    "claude-opus-4-0": {"input": 15.00, "output": 75.00},
+    "claude-opus-4-20250514": {"input": 15.00, "output": 75.00},
+    "claude-sonnet-4-0": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4-20250514": {"input": 3.00, "output": 15.00},
+    # Anthropic Claude 3.7
+    "claude-3-7-sonnet-20250219": {"input": 3.00, "output": 15.00},
+    "claude-3-7-sonnet-latest": {"input": 3.00, "output": 15.00},
+    # Anthropic Claude 3.5
     "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
     "claude-3-5-haiku-20241022": {"input": 0.80, "output": 4.00},
+    "claude-3-5-haiku-latest": {"input": 0.80, "output": 4.00},
+    # Anthropic Claude 3 (legacy)
     "claude-3-opus-20240229": {"input": 15.00, "output": 75.00},
+    "claude-3-opus-latest": {"input": 15.00, "output": 75.00},
     "claude-3-sonnet-20240229": {"input": 3.00, "output": 15.00},
     "claude-3-haiku-20240307": {"input": 0.25, "output": 1.25},
     # Google
-    "gemini-2.0-flash-exp": {"input": 0.00, "output": 0.00},  # Free tier
+    "gemini-2.0-flash-exp": {"input": 0.00, "output": 0.00},
     "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
     "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
-    # AWS Bedrock (example models)
+    # AWS Bedrock
     "anthropic.claude-3-5-sonnet-20241022-v2:0": {"input": 3.00, "output": 15.00},
     "anthropic.claude-3-5-haiku-20241022-v1:0": {"input": 0.80, "output": 4.00},
 }
