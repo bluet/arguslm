@@ -48,6 +48,9 @@ class UptimeCheck(BaseModel):
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ttft_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tps: Mapped[float | None] = mapped_column(Float, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
