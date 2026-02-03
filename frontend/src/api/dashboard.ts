@@ -24,6 +24,13 @@ interface AlertListResponse {
   offset: number;
 }
 
+interface ModelCountResponse {
+  items: unknown[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export async function getUptimeChecks(): Promise<UptimeCheck[]> {
   const response = await apiGet<UptimeListResponse>('/monitoring/uptime');
   return response.items;
@@ -46,10 +53,14 @@ export async function getBenchmarkHistory(days: number = 1): Promise<BenchmarkRu
   return response.runs;
 }
 
+export async function getModelCount(): Promise<number> {
+  const response = await apiGet<ModelCountResponse>('/models?limit=1');
+  return response.total;
+}
+
 // Aggregation Helpers
 
-export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[]): DashboardStats {
-  const totalModels = uptimeChecks.length;
+export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[], totalModels: number): DashboardStats {
   const modelsUp = uptimeChecks.filter(c => c.status === 'up').length;
   const modelsDown = uptimeChecks.filter(c => c.status === 'down').length;
   const modelsDegraded = uptimeChecks.filter(c => c.status === 'degraded').length;
@@ -70,15 +81,12 @@ export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[]): Da
   };
 }
 
-export function processPerformanceMetrics(benchmarks: BenchmarkRun[]): PerformanceMetric[] {
-  return benchmarks
-    .filter(b => b.status === 'completed' && b.completed_at)
-    .map(b => ({
-      time: b.completed_at!,
-      ttft: Math.random() * 100 + 50,
-      tps: Math.random() * 50 + 10
-    }))
-    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+export function processPerformanceMetrics(_benchmarks: BenchmarkRun[]): PerformanceMetric[] {
+  // TODO: BenchmarkRun doesn't contain TTFT/TPS metrics - those are in BenchmarkResult.
+  // Need backend aggregation endpoint that returns time-series performance data
+  // (e.g., /api/v1/benchmarks/performance-history?days=N) with aggregated TTFT/TPS per time period.
+  // For now, return empty array to avoid displaying misleading random data.
+  return [];
 }
 
 export function processLatencyComparison(uptimeChecks: UptimeCheck[]): LatencyMetric[] {
@@ -135,14 +143,15 @@ export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert
 export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'): Promise<DashboardData> {
   const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
   
-  const [uptimeChecks, benchmarks, history, alerts] = await Promise.all([
+  const [uptimeChecks, benchmarks, history, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
     getLatestBenchmarks(10),
     getBenchmarkHistory(days),
-    getAlerts(true)
+    getAlerts(true),
+    getModelCount()
   ]);
 
-  const stats = calculateStats(uptimeChecks, alerts);
+  const stats = calculateStats(uptimeChecks, alerts, modelCount);
   const performanceHistory = processPerformanceMetrics(history);
   const latencyComparison = processLatencyComparison(uptimeChecks);
   const recentActivity = generateRecentActivity(benchmarks, alerts, uptimeChecks);
