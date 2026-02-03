@@ -57,6 +57,9 @@ class UptimeCheckResponse(BaseModel):
     model_name: str = Field(..., description="Model display name")
     status: str = Field(..., description="Check status (up, down, degraded)")
     latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
+    ttft_ms: Optional[float] = Field(None, description="Time to first token in milliseconds")
+    tps: Optional[float] = Field(None, description="Tokens per second throughput")
+    output_tokens: Optional[int] = Field(None, description="Number of tokens generated")
     error: Optional[str] = Field(None, description="Error message if check failed")
     created_at: datetime = Field(..., description="Check timestamp")
 

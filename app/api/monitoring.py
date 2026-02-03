@@ -218,6 +218,9 @@ async def get_uptime_history(
                 model_name=model_name,
                 status=check.status,
                 latency_ms=check.latency_ms,
+                ttft_ms=check.ttft_ms,
+                tps=check.tps,
+                output_tokens=check.output_tokens,
                 error=check.error,
                 created_at=check.created_at,
             )
