@@ -151,9 +151,23 @@ const MonitoringPage: React.FC = () => {
   };
 
   // Derived state
-  const providers = useMemo(() => {
-    return Array.from(new Set(models.map(m => m.provider_account_id))).sort();
+  const providerMap = useMemo(() => {
+    const map = new Map<string, string>();
+    models.forEach(m => {
+      if (m.provider_account_id && !map.has(m.provider_account_id)) {
+        map.set(m.provider_account_id, m.provider_name || m.provider_account_id);
+      }
+    });
+    return map;
   }, [models]);
+
+  const providers = useMemo(() => {
+    return Array.from(providerMap.keys()).sort((a, b) => {
+      const nameA = providerMap.get(a) || a;
+      const nameB = providerMap.get(b) || b;
+      return nameA.localeCompare(nameB);
+    });
+  }, [providerMap]);
 
   const filteredModels = useMemo(() => {
     return models.filter(m => 
@@ -292,18 +306,18 @@ const MonitoringPage: React.FC = () => {
           <>
             <div className="border-b border-gray-200 mb-6">
               <nav className="-mb-px flex space-x-8 overflow-x-auto">
-                {providers.map((provider) => (
+                {providers.map((providerId) => (
                   <button
-                    key={provider}
-                    onClick={() => setSelectedProvider(provider)}
+                    key={providerId}
+                    onClick={() => setSelectedProvider(providerId)}
                     className={`
                       whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors
-                      ${selectedProvider === provider
+                      ${selectedProvider === providerId
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
                     `}
                   >
-                    {provider}
+                    {providerMap.get(providerId) || providerId}
                   </button>
                 ))}
               </nav>
