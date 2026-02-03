@@ -10,8 +10,9 @@ ArgusLM is a comprehensive, self-hosted tool designed to benchmark and monitor t
 
 - **Multi-Provider Support**: Seamlessly integrate with OpenAI, Anthropic, AWS Bedrock, Google Vertex, Azure OpenAI, Ollama, LM Studio, and more via LiteLLM.
 - **Parallel Benchmarking**: Run performance tests across multiple models simultaneously to compare latency and throughput.
+- **Performance Metrics**: Track Time to First Token (TTFT) and Tokens Per Second (TPS) for meaningful cross-model comparison—metrics that matter regardless of output length.
 - **Uptime Monitoring**: Configure automated health checks at custom intervals to ensure your LLM services are always available.
-- **Real-time Dashboard**: Visualize current status, historical performance trends, and uptime statistics with interactive graphs.
+- **Real-time Dashboard**: Visualize current status, latency trends, TTFT, and TPS history with interactive charts.
 - **Intelligent Alerting**: Receive in-app notifications for model downtime, performance degradation, or global unavailability.
 - **Model Discovery**: Automatically detect available models from supported providers or manually configure custom endpoints.
 - **Custom Model Naming**: Organize your models with human-readable names for better tracking.
