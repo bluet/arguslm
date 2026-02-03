@@ -465,7 +465,7 @@ const MonitoringPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {check.latency_ms ? `${check.latency_ms}ms` : '-'}
+                    {check.latency_ms ? `${Math.round(check.latency_ms)}ms` : '-'}
                   </td>
                   <td className="px-6 py-4 text-sm text-red-600 max-w-xs truncate" title={check.error || ''}>
                     {check.error || '-'}
