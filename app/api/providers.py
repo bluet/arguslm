@@ -1,8 +1,10 @@
 """Provider Account CRUD API endpoints."""
 
 import logging
+import time
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -202,42 +204,101 @@ async def delete_provider(
     logger.info("Deleted provider account: %s", provider.display_name)
 
 
+# LiteLLM provider prefixes for model names
+LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
+    "openai": "",
+    "anthropic": "anthropic/",
+    "azure_openai": "azure/",
+    "aws_bedrock": "bedrock/",
+    "google_vertex": "vertex_ai/",
+    "google_gemini": "gemini/",
+    "together_ai": "together_ai/",
+    "groq": "groq/",
+    "mistral": "mistral/",
+    "ollama": "ollama/",
+    "lm_studio": "openai/",
+    "openrouter": "openrouter/",
+    "custom_openai_compatible": "openai/",
+}
+
+
+async def _test_local_provider_ping(base_url: str, provider_type: str) -> ProviderTestResponse:
+    """Test local provider (Ollama/LM Studio) by pinging its API endpoint."""
+    if provider_type == "ollama":
+        test_url = f"{base_url.rstrip('/')}/api/tags"
+    else:
+        test_url = f"{base_url.rstrip('/')}/models"
+
+    start = time.perf_counter()
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(test_url)
+            latency_ms = (time.perf_counter() - start) * 1000
+
+            if response.status_code == 200:
+                data = response.json()
+                model_count = len(data.get("models", data.get("data", [])))
+                return ProviderTestResponse(
+                    success=True,
+                    message=f"Server reachable, {model_count} model(s) available ({int(latency_ms)}ms)",
+                    details={"models_found": model_count, "latency_ms": int(latency_ms)},
+                )
+            else:
+                return ProviderTestResponse(
+                    success=False,
+                    message=f"Server returned status {response.status_code}",
+                    details={"status_code": response.status_code},
+                )
+    except httpx.ConnectError as e:
+        return ProviderTestResponse(
+            success=False,
+            message=f"Cannot connect to {base_url}. Check if server is running.",
+            details={"error_type": "ConnectError", "hint": str(e)},
+        )
+    except Exception as e:
+        return ProviderTestResponse(
+            success=False,
+            message=f"Connection test failed: {str(e)}",
+            details={"error_type": type(e).__name__},
+        )
+
+
 @router.post("/test-connection", response_model=ProviderTestResponse)
 async def test_new_provider_connection(
     provider_data: ProviderCreate,
 ) -> ProviderTestResponse:
-    """Test connection for a new provider before saving.
-
-    Args:
-        provider_data: Provider creation data
-
-    Returns:
-        Test result with success status and message
-    """
-    # Get credentials
+    """Test connection for a new provider before saving."""
     credentials = provider_data.credentials
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
 
-    # Determine test model based on provider type
+    if provider_data.provider_type in ("ollama", "lm_studio"):
+        if not api_base:
+            return ProviderTestResponse(
+                success=False,
+                message="Base URL is required for local providers",
+                details={},
+            )
+        return await _test_local_provider_ping(api_base, provider_data.provider_type)
+
     test_models = {
         "openai": "gpt-3.5-turbo",
-        "anthropic": "claude-3-haiku-20240307",
-        "google_gemini": "gemini-1.5-flash",
-        "ollama": "llama2",
-        "groq": "llama3-8b-8192",
-        "mistral": "mistral-small-latest",
+        "anthropic": "anthropic/claude-3-haiku-20240307",
+        "google_gemini": "gemini/gemini-1.5-flash",
+        "groq": "groq/llama3-8b-8192",
+        "mistral": "mistral/mistral-small-latest",
+        "together_ai": "together_ai/meta-llama/Llama-3-8b-chat-hf",
+        "openrouter": "openrouter/meta-llama/llama-3-8b-instruct",
     }
     test_model = test_models.get(provider_data.provider_type, "gpt-3.5-turbo")
 
-    # Try minimal completion request
     try:
         client = LiteLLMClient(default_timeout=10.0, default_max_retries=1)
         response = await client.complete(
             model=test_model,
             messages=[{"role": "user", "content": "test"}],
-            max_tokens=5,
-            api_key=api_key,
+            max_tokens=10,
+            api_key=api_key or "sk-not-needed",
             api_base=api_base,
         )
 
@@ -294,30 +355,37 @@ async def test_provider_connection(
             detail="Provider type is missing or invalid",
         )
 
-    # Get credentials
     credentials = provider.credentials
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
 
-    # Determine test model based on provider type
+    if provider.provider_type in ("ollama", "lm_studio"):
+        if not api_base:
+            return ProviderTestResponse(
+                success=False,
+                message="Base URL is required for local providers",
+                details={},
+            )
+        return await _test_local_provider_ping(api_base, provider.provider_type)
+
     test_models = {
         "openai": "gpt-3.5-turbo",
-        "anthropic": "claude-3-haiku-20240307",
-        "google_gemini": "gemini-1.5-flash",
-        "ollama": "llama2",
-        "groq": "llama3-8b-8192",
-        "mistral": "mistral-small-latest",
+        "anthropic": "anthropic/claude-3-haiku-20240307",
+        "google_gemini": "gemini/gemini-1.5-flash",
+        "groq": "groq/llama3-8b-8192",
+        "mistral": "mistral/mistral-small-latest",
+        "together_ai": "together_ai/meta-llama/Llama-3-8b-chat-hf",
+        "openrouter": "openrouter/meta-llama/llama-3-8b-instruct",
     }
     test_model = test_models.get(provider.provider_type, "gpt-3.5-turbo")
 
-    # Try minimal completion request
     try:
         client = LiteLLMClient(default_timeout=10.0, default_max_retries=1)
         response = await client.complete(
             model=test_model,
             messages=[{"role": "user", "content": "test"}],
-            max_tokens=5,
-            api_key=api_key,
+            max_tokens=10,
+            api_key=api_key or "sk-not-needed",
             api_base=api_base,
         )
 
