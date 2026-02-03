@@ -27,7 +27,7 @@ interface BackendProviderResponse {
   updated_at: string;
 }
 
-function transformToBackendFormat(data: ProviderCreate): BackendProviderCreate {
+export function transformToBackendFormat(data: ProviderCreate): BackendProviderCreate {
   const credentials: Record<string, string> = {};
   if (data.api_key) credentials.api_key = data.api_key;
   if (data.base_url) credentials.base_url = data.base_url;
@@ -102,6 +102,11 @@ export async function deleteProvider(id: string): Promise<void> {
 
 export async function testProvider(id: string): Promise<ProviderTestResult> {
   return apiPost<ProviderTestResult>(`/providers/${id}/test`);
+}
+
+export async function testProviderConnection(data: ProviderCreate): Promise<ProviderTestResult> {
+  const backendData = transformToBackendFormat(data);
+  return apiPost<ProviderTestResult>('/providers/test-connection', backendData);
 }
 
 export async function refreshModels(id: string): Promise<void> {

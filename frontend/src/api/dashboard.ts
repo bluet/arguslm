@@ -36,6 +36,12 @@ export async function getUptimeChecks(): Promise<UptimeCheck[]> {
   return response.items;
 }
 
+export async function getUptimeHistory(days: number = 1): Promise<UptimeCheck[]> {
+  const limit = Math.min(days * 24 * 60, 1000);
+  const response = await apiGet<UptimeListResponse>(`/monitoring/uptime?limit=${limit}`);
+  return response.items;
+}
+
 export async function getLatestBenchmarks(limit: number = 5): Promise<BenchmarkRun[]> {
   const response = await apiGet<BenchmarkListResponse>(`/benchmarks?limit=${limit}`);
   return response.runs;
@@ -93,41 +99,32 @@ export function calculateStats(uptimeChecks: UptimeCheck[], alerts: Alert[], tot
 }
 
 /**
- * Fetches real performance data from completed benchmark runs.
- * Retrieves TTFT and TPS from individual benchmark results, averages multiple results per run,
- * and returns sorted time-series data for charting.
+ * Processes uptime checks into time-series data for charting.
+ * Groups checks by minute and model to create multi-line chart data.
  */
-async function fetchBenchmarkPerformanceData(runs: BenchmarkRun[]): Promise<PerformanceMetric[]> {
-  // Only process completed runs that have results
-  const completedRuns = runs.filter(r => r.status === 'completed' && r.result_count > 0);
+function processUptimeHistory(checks: UptimeCheck[]): PerformanceMetric[] {
+  const groupedByTime = new Map<string, Record<string, number>>();
   
-  // Limit to last 10 runs for performance
-  const recentRuns = completedRuns.slice(0, 10);
+  checks.forEach(check => {
+    if (check.latency_ms === null) return;
+    
+    // Round to nearest minute to align points
+    const date = new Date(check.created_at);
+    date.setSeconds(0, 0);
+    const timeKey = date.toISOString();
+    
+    if (!groupedByTime.has(timeKey)) {
+      groupedByTime.set(timeKey, {});
+    }
+    
+    groupedByTime.get(timeKey)![check.model_name] = check.latency_ms;
+  });
   
-  const results = await Promise.all(
-    recentRuns.map(async (run) => {
-      try {
-        const response = await apiGet<{results: Array<{ttft_ms: number, tps: number}>}>(`/benchmarks/${run.id}/results`);
-        if (response.results.length > 0) {
-          // Average if multiple results per run
-          const avgTtft = response.results.reduce((sum, r) => sum + r.ttft_ms, 0) / response.results.length;
-          const avgTps = response.results.reduce((sum, r) => sum + r.tps, 0) / response.results.length;
-          return {
-            time: run.completed_at || run.started_at,
-            ttft: avgTtft,
-            tps: avgTps
-          };
-        }
-        return null;
-      } catch {
-        // Skip failed fetches gracefully
-        return null;
-      }
-    })
-  );
-  
-  return results
-    .filter((r): r is PerformanceMetric => r !== null)
+  return Array.from(groupedByTime.entries())
+    .map(([time, models]) => ({
+      time,
+      ...models
+    }))
     .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 }
 
@@ -185,10 +182,10 @@ export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert
 export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'): Promise<DashboardData> {
   const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
   
-  const [rawUptimeChecks, benchmarks, history, alerts, modelCount] = await Promise.all([
+  const [rawUptimeChecks, benchmarks, uptimeHistory, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
     getLatestBenchmarks(10),
-    getBenchmarkHistory(days),
+    getUptimeHistory(days),
     getAlerts(true),
     getModelCount()
   ]);
@@ -196,7 +193,7 @@ export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'):
   const uptimeChecks = aggregateByModel(rawUptimeChecks);
 
   const stats = calculateStats(uptimeChecks, alerts, modelCount);
-  const performanceHistory = await fetchBenchmarkPerformanceData(history);
+  const performanceHistory = processUptimeHistory(uptimeHistory);
   const latencyComparison = processLatencyComparison(uptimeChecks);
   const recentActivity = generateRecentActivity(benchmarks, alerts, uptimeChecks);
 

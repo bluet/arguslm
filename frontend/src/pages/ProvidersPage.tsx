@@ -18,6 +18,7 @@ import {
   updateProvider, 
   deleteProvider, 
   testProvider, 
+  testProviderConnection,
   refreshModels 
 } from '../api/providers';
 import { Provider, ProviderCreate, ProviderType } from '../types/provider';
@@ -73,6 +74,7 @@ export const ProvidersPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [expandedProviderId, setExpandedProviderId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, { success: boolean; message: string; latency?: number }>>({});
+  const [connectionTestResult, setConnectionTestResult] = useState<{ success: boolean; message: string; latency?: number } | null>(null);
 
   // Form state for new provider
   const [newProvider, setNewProvider] = useState<ProviderCreate>({
@@ -96,6 +98,7 @@ export const ProvidersPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
       setIsAddModalOpen(false);
+      setConnectionTestResult(null);
       setNewProvider({
         name: '',
         provider_type: 'openai',
@@ -137,6 +140,16 @@ export const ProvidersPage = () => {
         ...prev,
         [variables]: { success: false, message: error instanceof Error ? error.message : 'Test failed' }
       }));
+    }
+  });
+
+  const testConnectionMutation = useMutation({
+    mutationFn: testProviderConnection,
+    onSuccess: (data) => {
+      setConnectionTestResult({ success: data.success, message: data.message, latency: data.latency_ms });
+    },
+    onError: (error) => {
+      setConnectionTestResult({ success: false, message: error instanceof Error ? error.message : 'Test failed' });
     }
   });
 
@@ -353,11 +366,11 @@ export const ProvidersPage = () => {
 
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => { setIsAddModalOpen(false); setConnectionTestResult(null); }}
         title="Add New Provider"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => { setIsAddModalOpen(false); setConnectionTestResult(null); }}>Cancel</Button>
             <Button onClick={handleCreate} isLoading={createMutation.isPending}>Create Provider</Button>
           </>
         }
@@ -411,8 +424,36 @@ export const ProvidersPage = () => {
                 value={newProvider.project_id}
                 onChange={(e) => setNewProvider({ ...newProvider, project_id: e.target.value })}
               />
-            </div>
+              </div>
           )}
+
+          <div className="pt-2 border-t border-gray-800 mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium text-gray-400">Connection Test</h4>
+              <Button 
+                type="button"
+                size="sm" 
+                variant="secondary" 
+                onClick={() => testConnectionMutation.mutate(newProvider)}
+                isLoading={testConnectionMutation.isPending}
+              >
+                Test Connection
+              </Button>
+            </div>
+            
+            {connectionTestResult && (
+              <div className={`text-xs p-3 rounded border ${connectionTestResult.success ? 'bg-green-900/20 border-green-900 text-green-400' : 'bg-red-900/20 border-red-900 text-red-400'}`}>
+                <div className="flex items-center gap-2 font-bold">
+                  {connectionTestResult.success ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                  {connectionTestResult.success ? 'CONNECTION SUCCESSFUL' : 'CONNECTION FAILED'}
+                </div>
+                <div className="mt-1 font-mono opacity-80 break-all whitespace-pre-wrap">
+                  {connectionTestResult.message}
+                  {connectionTestResult.latency && ` (${connectionTestResult.latency}ms)`}
+                </div>
+              </div>
+            )}
+          </div>
         </form>
       </Modal>
     </div>

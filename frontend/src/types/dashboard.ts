@@ -21,8 +21,7 @@ export interface DashboardStats {
 
 export interface PerformanceMetric {
   time: string;
-  ttft: number;
-  tps: number;
+  [key: string]: number | string;
 }
 
 export interface LatencyMetric {

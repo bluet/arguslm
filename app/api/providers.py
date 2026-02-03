@@ -202,6 +202,66 @@ async def delete_provider(
     logger.info("Deleted provider account: %s", provider.display_name)
 
 
+@router.post("/test-connection", response_model=ProviderTestResponse)
+async def test_new_provider_connection(
+    provider_data: ProviderCreate,
+) -> ProviderTestResponse:
+    """Test connection for a new provider before saving.
+
+    Args:
+        provider_data: Provider creation data
+
+    Returns:
+        Test result with success status and message
+    """
+    # Get credentials
+    credentials = provider_data.credentials
+    api_key = credentials.get("api_key")
+    api_base = credentials.get("base_url")
+
+    # Determine test model based on provider type
+    test_models = {
+        "openai": "gpt-3.5-turbo",
+        "anthropic": "claude-3-haiku-20240307",
+        "google_gemini": "gemini-1.5-flash",
+        "ollama": "llama2",
+        "groq": "llama3-8b-8192",
+        "mistral": "mistral-small-latest",
+    }
+    test_model = test_models.get(provider_data.provider_type, "gpt-3.5-turbo")
+
+    # Try minimal completion request
+    try:
+        client = LiteLLMClient(default_timeout=10.0, default_max_retries=1)
+        response = await client.complete(
+            model=test_model,
+            messages=[{"role": "user", "content": "test"}],
+            max_tokens=5,
+            api_key=api_key,
+            api_base=api_base,
+        )
+
+        logger.info("Connection test successful for new provider: %s", provider_data.display_name)
+
+        return ProviderTestResponse(
+            success=True,
+            message=f"Successfully connected to {provider_data.provider_type}",
+            details={"model_tested": test_model, "response_id": response.get("id")},
+        )
+
+    except Exception as e:
+        logger.error(
+            "Connection test failed for new provider %s: %s",
+            provider_data.display_name,
+            str(e),
+        )
+        return ProviderTestResponse(
+            success=False,
+            message=f"Connection test failed: {str(e)}",
+            details={"error_type": type(e).__name__},
+        )
+
+
 @router.post("/{provider_id}/test", response_model=ProviderTestResponse)
 async def test_provider_connection(
     provider_id: UUID,

@@ -19,10 +19,13 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
+  Legend,
   ResponsiveContainer 
 } from 'recharts';
 import { getDashboardData } from '../api/dashboard';
 import { DashboardData } from '../types/dashboard';
+
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -87,6 +90,10 @@ const DashboardPage: React.FC = () => {
       </div>
     );
   }
+
+  const modelNames = Array.from(new Set(
+    data?.performanceHistory.flatMap(item => Object.keys(item).filter(k => k !== 'time')) || []
+  ));
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -233,9 +240,9 @@ const DashboardPage: React.FC = () => {
           </div>
           
           <div className="space-y-8">
-            {/* TTFT Chart */}
-            <div className="h-[250px]">
-              <h3 className="text-sm font-medium text-gray-500 mb-4">Time to First Token (ms)</h3>
+            {/* Latency History Chart */}
+            <div className="h-[400px]">
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Latency History (ms)</h3>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.performanceHistory}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -255,50 +262,21 @@ const DashboardPage: React.FC = () => {
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    wrapperStyle={{ zIndex: 1000 }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="ttft" 
-                    stroke="#8B5CF6" 
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* TPS Chart */}
-            <div className="h-[250px]">
-              <h3 className="text-sm font-medium text-gray-500 mb-4">Tokens Per Second</h3>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data?.performanceHistory}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis 
-                    dataKey="time" 
-                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
-                    stroke="#9CA3AF"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    stroke="#9CA3AF"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="tps" 
-                    stroke="#10B981" 
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
+                  <Legend />
+                  {modelNames.map((modelName, index) => (
+                    <Line 
+                      key={modelName}
+                      type="monotone" 
+                      dataKey={modelName} 
+                      stroke={COLORS[index % COLORS.length]} 
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
