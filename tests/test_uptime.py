@@ -117,7 +117,7 @@ async def test_check_uptime_no_latency_on_failure(mock_model):
 
 @pytest.mark.asyncio
 async def test_check_uptime_uses_minimal_tokens(mock_model):
-    """Test that uptime check uses minimal tokens (max_tokens=1)."""
+    """Test that uptime check uses minimal tokens (max_tokens=10)."""
     with patch("app.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
@@ -125,10 +125,10 @@ async def test_check_uptime_uses_minimal_tokens(mock_model):
 
         await check_uptime(mock_model)
 
-        # Verify the call was made with max_tokens=1
+        # Verify the call was made with max_tokens=10
         mock_complete.assert_called_once()
         call_kwargs = mock_complete.call_args[1]
-        assert call_kwargs["max_tokens"] == 1
+        assert call_kwargs["max_tokens"] == 10
 
 
 @pytest.mark.asyncio

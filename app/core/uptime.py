@@ -59,7 +59,8 @@ async def check_uptime(model: "Model") -> UptimeCheck:
         response = await complete(
             model=litellm_model,
             messages=[{"role": "user", "content": "Hi"}],
-            max_tokens=1,
+            max_tokens=10,
+            temperature=1,  # gpt-5 models only support temperature=1
             timeout=10,
             api_key=api_key or "sk-not-needed",
             api_base=api_base,
