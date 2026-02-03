@@ -31,8 +31,8 @@ interface ModelCountResponse {
   offset: number;
 }
 
-export async function getUptimeChecks(): Promise<UptimeCheck[]> {
-  const response = await apiGet<UptimeListResponse>('/monitoring/uptime');
+export async function getUptimeChecks(enabledOnly: boolean = true): Promise<UptimeCheck[]> {
+  const response = await apiGet<UptimeListResponse>(`/monitoring/uptime?enabled_only=${enabledOnly}`);
   return response.items;
 }
 

@@ -157,7 +157,7 @@ async def get_uptime_history(
     status: Optional[str] = Query(None, description="Filter by status (up, down, degraded)"),
     since: Optional[datetime] = Query(None, description="Filter by created_at >= since"),
     enabled_only: bool = Query(
-        True, description="Only show checks for models with monitoring enabled"
+        False, description="Only show checks for models with monitoring enabled"
     ),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
