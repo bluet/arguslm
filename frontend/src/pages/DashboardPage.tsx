@@ -311,25 +311,39 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Latency by Model</h2>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data?.latencyComparison} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB" />
-                  <XAxis type="number" hide />
-                  <YAxis 
-                    dataKey="model_name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12, fill: '#6B7280' }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: '#F3F4F6' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="latency" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
+              {data?.latencyComparison && data.latencyComparison.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={data.latencyComparison} layout="vertical" margin={{ left: 10, right: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB" />
+                    <XAxis 
+                      type="number" 
+                      domain={[0, 'auto']}
+                      tick={{ fontSize: 12, fill: '#6B7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `${value}ms`}
+                    />
+                    <YAxis 
+                      dataKey="model_name" 
+                      type="category" 
+                      width={100}
+                      tick={{ fontSize: 12, fill: '#6B7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip 
+                      cursor={{ fill: '#F3F4F6' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: number | undefined) => [`${Math.round(Number(value || 0))}ms`, 'Latency']}
+                    />
+                    <Bar dataKey="latency" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-400">
+                  <p>No latency data available</p>
+                </div>
+              )}
             </div>
           </div>
 

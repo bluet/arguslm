@@ -74,18 +74,14 @@ export default function BenchmarksPage() {
     };
   }, []);
 
-  const loadModels = async () => {
-    try {
-      const data = await modelsApi.listModels({ enabled_for_benchmark: true });
-      setModels(data);
-      // Select all by default if none selected
-      if (data.length > 0 && selectedModelIds.length === 0) {
-        setSelectedModelIds(data.map(m => m.id));
-      }
-    } catch (error) {
-      console.error('Failed to load models:', error);
-    }
-  };
+   const loadModels = async () => {
+     try {
+       const data = await modelsApi.listModels({ enabled_for_benchmark: true });
+       setModels(data);
+     } catch (error) {
+       console.error('Failed to load models:', error);
+     }
+   };
 
   const loadHistory = async () => {
     try {

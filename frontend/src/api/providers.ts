@@ -58,8 +58,40 @@ export async function createProvider(data: ProviderCreate): Promise<Provider> {
   return transformFromBackendFormat(response);
 }
 
+interface BackendProviderUpdate {
+  display_name?: string;
+  credentials?: Record<string, string>;
+  enabled?: boolean;
+}
+
+function transformUpdateToBackendFormat(data: ProviderUpdate): BackendProviderUpdate {
+  const backendData: BackendProviderUpdate = {};
+  
+  if (data.name !== undefined) {
+    backendData.display_name = data.name;
+  }
+  if (data.is_enabled !== undefined) {
+    backendData.enabled = data.is_enabled;
+  }
+  
+  const credentials: Record<string, string> = {};
+  if (data.api_key !== undefined) credentials.api_key = data.api_key;
+  if (data.base_url !== undefined) credentials.base_url = data.base_url;
+  if (data.organization_id !== undefined) credentials.organization_id = data.organization_id;
+  if (data.project_id !== undefined) credentials.project_id = data.project_id;
+  if (data.region !== undefined) credentials.region = data.region;
+  
+  if (Object.keys(credentials).length > 0) {
+    backendData.credentials = credentials;
+  }
+  
+  return backendData;
+}
+
 export async function updateProvider(id: string, data: ProviderUpdate): Promise<Provider> {
-  return apiPatch<Provider>(`/providers/${id}`, data);
+  const backendData = transformUpdateToBackendFormat(data);
+  const response = await apiPatch<BackendProviderResponse>(`/providers/${id}`, backendData);
+  return transformFromBackendFormat(response);
 }
 
 export async function deleteProvider(id: string): Promise<void> {

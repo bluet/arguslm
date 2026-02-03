@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { modelsApi } from '../api/models';
+import { listProviders } from '../api/providers';
 import { Model, CreateModelData } from '../types/model';
+import { Provider } from '../types/provider';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
@@ -89,8 +91,10 @@ export const ModelsPage = () => {
     setEditName('');
   };
 
-  // Mock providers
-  const providers = ['openai', 'anthropic', 'google', 'meta', 'mistral', 'cohere'];
+  const { data: providers = [] } = useQuery<Provider[]>({
+    queryKey: ['providers'],
+    queryFn: listProviders,
+  });
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -122,8 +126,8 @@ export const ModelsPage = () => {
           >
             <option value="">All Providers</option>
             {providers.map((p) => (
-              <option key={p} value={p}>
-                {p.charAt(0).toUpperCase() + p.slice(1)}
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
           </select>
