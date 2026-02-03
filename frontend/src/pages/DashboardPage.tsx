@@ -126,7 +126,7 @@ const DashboardPage: React.FC = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-gray-500">System Status</p>
+              <p className="text-sm font-medium text-gray-500">Model Health</p>
               <div className="flex gap-3 mt-2">
                 <div className="flex items-center gap-1 text-green-600">
                   <CheckCircle size={16} />
