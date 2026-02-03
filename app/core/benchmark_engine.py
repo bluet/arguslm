@@ -36,6 +36,35 @@ def _get_provider_key(model: Model) -> str:
     return provider_type or "unknown"
 
 
+# LiteLLM requires model name prefixes for non-OpenAI providers
+LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
+    "openai": "",
+    "anthropic": "anthropic/",
+    "azure": "azure/",
+    "bedrock": "bedrock/",
+    "vertex_ai": "vertex_ai/",
+    "cohere": "cohere/",
+    "together_ai": "together_ai/",
+    "groq": "groq/",
+    "mistral": "mistral/",
+    "deepseek": "deepseek/",
+    "ollama": "ollama/",
+    "lm_studio": "openai/",
+    "custom_openai_compatible": "openai/",
+}
+
+
+def _get_litellm_model_name(model: Model) -> str:
+    """Get the LiteLLM-formatted model name with provider prefix."""
+    provider_account = getattr(model, "provider_account", None)
+    provider_type = getattr(provider_account, "provider_type", None) or "openai"
+    prefix = LITELLM_PROVIDER_PREFIXES.get(provider_type, "")
+    model_id = model.model_id
+    if prefix and not model_id.startswith(prefix):
+        return f"{prefix}{model_id}"
+    return model_id
+
+
 def _init_semaphores(throttle: ThrottleConfig) -> dict[str, Any]:
     return {
         "global": asyncio.Semaphore(throttle.global_concurrency),
@@ -175,11 +204,12 @@ async def benchmark_single_model(
         first_content_received = False
 
         try:
+            litellm_model = _get_litellm_model_name(model)
             stream = client.complete_stream(
-                model=model.model_id,
+                model=litellm_model,
                 messages=[{"role": "user", "content": prompt_pack}],
                 max_tokens=max_tokens,
-                api_key=api_key,
+                api_key=api_key or "sk-not-needed",
                 api_base=api_base,
             )
 

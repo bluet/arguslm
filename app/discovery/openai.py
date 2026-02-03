@@ -69,10 +69,16 @@ class OpenAIModelSource:
                 )
                 return []
 
+            # Build headers - only include Authorization if api_key is provided
+            # (LM Studio and other local servers don't require auth)
+            headers = {}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(
                     f"{base_url.rstrip('/')}/models",
-                    headers={"Authorization": f"Bearer {api_key}"},
+                    headers=headers,
                 )
                 response.raise_for_status()
                 data = response.json()
