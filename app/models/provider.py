@@ -54,6 +54,11 @@ class ProviderAccount(BaseModel):
         """Encrypt and store credentials dictionary."""
         self.credentials_encrypted = encrypt_credentials(value)
 
+    @property
+    def base_url(self) -> str | None:
+        """Extract base_url from credentials for display (non-sensitive)."""
+        return self.credentials.get("base_url")
+
     def __repr__(self) -> str:
         """String representation."""
         return (
