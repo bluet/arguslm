@@ -94,7 +94,7 @@ export const NotificationBell: React.FC = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
             <h3 className="text-sm font-semibold text-gray-100">Notifications</h3>
@@ -138,7 +138,7 @@ export const NotificationBell: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`text-sm ${
+                      className={`text-sm break-words ${
                         alert.acknowledged ? 'text-gray-400' : 'text-gray-200'
                       }`}
                     >
