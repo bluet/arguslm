@@ -32,7 +32,8 @@ export const benchmarksApi = {
   },
 
   getBenchmarkResults: async (id: string): Promise<BenchmarkResult[]> => {
-    return apiGet<BenchmarkResult[]>(`/benchmarks/${id}/results`);
+    const response = await apiGet<{ results: BenchmarkResult[]; total: number }>(`/benchmarks/${id}/results`);
+    return response.results;
   },
 
   createBenchmark: async (data: CreateBenchmarkData): Promise<BenchmarkRun> => {
