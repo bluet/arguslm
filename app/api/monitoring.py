@@ -156,6 +156,9 @@ async def get_uptime_history(
     model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
     status: Optional[str] = Query(None, description="Filter by status (up, down, degraded)"),
     since: Optional[datetime] = Query(None, description="Filter by created_at >= since"),
+    enabled_only: bool = Query(
+        True, description="Only show checks for models with monitoring enabled"
+    ),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_db),
@@ -166,6 +169,7 @@ async def get_uptime_history(
     - model_id: Filter by specific model
     - status: Filter by status (up, down, degraded)
     - since: Filter by created_at >= since
+    - enabled_only: Only return checks for models with monitoring enabled (default True)
     - limit: Maximum results (default 100, max 1000)
     - offset: Pagination offset (default 0)
     """
@@ -181,20 +185,21 @@ async def get_uptime_history(
     if since is not None:
         filters.append(UptimeCheck.created_at >= since)
 
-    # Get total count
+    if enabled_only:
+        filters.append(Model.enabled_for_monitoring == True)
+
     count_stmt = select(func.count(UptimeCheck.id))
+    if enabled_only:
+        count_stmt = count_stmt.join(Model, UptimeCheck.model_id == Model.id)
     if filters:
         count_stmt = count_stmt.where(and_(*filters))
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0
 
-    stmt = (
-        select(UptimeCheck)
-        .options(selectinload(UptimeCheck.model))
-        .order_by(desc(UptimeCheck.created_at))
-        .limit(limit)
-        .offset(offset)
-    )
+    stmt = select(UptimeCheck).options(selectinload(UptimeCheck.model))
+    if enabled_only:
+        stmt = stmt.join(Model, UptimeCheck.model_id == Model.id)
+    stmt = stmt.order_by(desc(UptimeCheck.created_at)).limit(limit).offset(offset)
 
     if filters:
         stmt = stmt.where(and_(*filters))
