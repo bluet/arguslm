@@ -6,6 +6,7 @@ import { ProvidersPage } from './pages/ProvidersPage';
 import { ModelsPage } from './pages/ModelsPage';
 import BenchmarksPage from './pages/BenchmarksPage';
 import MonitoringPage from './pages/MonitoringPage';
+import SettingsPage from './pages/SettingsPage';
 import { NotificationBell } from './components/NotificationBell';
 
 const SidebarItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => {
@@ -17,8 +18,8 @@ const SidebarItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; l
       to={to}
       className={`flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
         isActive 
-          ? 'bg-blue-900/20 text-blue-400 border-r-2 border-blue-500' 
-          : 'text-gray-400 hover:bg-gray-900 hover:text-gray-200'
+          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-r-2 border-blue-500' 
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200'
       }`}
     >
       {icon}
@@ -29,14 +30,14 @@ const SidebarItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; l
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex min-h-screen bg-gray-950 text-gray-100 font-sans">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-200">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-gray-800 bg-gray-950 flex flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-gray-800">
+      <aside className="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col fixed h-full z-10 transition-colors duration-200">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Activity className="w-6 h-6 text-blue-500" />
-              <span className="text-lg font-bold tracking-tight text-white">ArgusLM</span>
+              <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">ArgusLM</span>
             </div>
             <NotificationBell />
           </div>
@@ -50,7 +51,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <SidebarItem to="/monitoring" icon={<Activity className="w-5 h-5" />} label="Monitoring" />
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <SidebarItem to="/settings" icon={<Settings className="w-5 h-5" />} label="Settings" />
         </div>
       </aside>
@@ -73,6 +74,7 @@ function App() {
         <Route path="/models" element={<ModelsPage />} />
         <Route path="/benchmarks" element={<BenchmarksPage />} />
         <Route path="/monitoring" element={<MonitoringPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<div className="p-8 text-gray-400">404 Not Found</div>} />
       </Routes>
     </Layout>
