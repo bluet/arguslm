@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Clock, Check, ChevronDown, ChevronUp, Activity, AlertCircle, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Play, Clock, Check, ChevronDown, ChevronUp, Activity, AlertCircle, Download, Search } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -51,6 +51,8 @@ export default function BenchmarksPage() {
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [promptPack, setPromptPack] = useState<string>('synthetic_short');
   const [numRuns, setNumRuns] = useState<number>(3);
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [modelSearch, setModelSearch] = useState('');
   
   // Execution State
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -78,6 +80,13 @@ export default function BenchmarksPage() {
      try {
        const data = await modelsApi.listModels({ enabled_for_benchmark: true });
        setModels(data);
+       
+       if (data.length > 0) {
+         const providers = Array.from(new Set(data.map(m => m.provider_account_id)));
+         if (providers.length > 0) {
+           setSelectedProvider(providers[0]);
+         }
+       }
      } catch (error) {
        console.error('Failed to load models:', error);
      }
@@ -194,6 +203,31 @@ export default function BenchmarksPage() {
     );
   };
 
+  const providerMap = useMemo(() => {
+    const map = new Map<string, string>();
+    models.forEach(m => {
+      if (m.provider_account_id && !map.has(m.provider_account_id)) {
+        map.set(m.provider_account_id, m.provider_name || m.provider_account_id);
+      }
+    });
+    return map;
+  }, [models]);
+
+  const providers = useMemo(() => {
+    return Array.from(providerMap.keys()).sort((a, b) => {
+      const nameA = providerMap.get(a) || a;
+      const nameB = providerMap.get(b) || b;
+      return nameA.localeCompare(nameB);
+    });
+  }, [providerMap]);
+
+  const filteredModels = useMemo(() => {
+    return models.filter(m => 
+      m.provider_account_id === selectedProvider &&
+      (m.custom_name || m.model_id).toLowerCase().includes(modelSearch.toLowerCase())
+    );
+  }, [models, selectedProvider, modelSearch]);
+
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
       <div className="flex justify-between items-center">
@@ -212,12 +246,46 @@ export default function BenchmarksPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Model Selector */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Models</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Models</label>
+                <div className="relative w-48">
+                  <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
+                    className="pl-7 pr-2 py-1 text-xs border border-gray-300 rounded-md w-full focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700"
+                  />
+                </div>
+              </div>
+              
+              {providers.length > 0 && (
+                <div className="border-b border-gray-200 dark:border-gray-700 mb-2">
+                  <nav className="-mb-px flex space-x-4 overflow-x-auto pb-1">
+                    {providers.map((providerId) => (
+                      <button
+                        key={providerId}
+                        onClick={() => setSelectedProvider(providerId)}
+                        className={`
+                          whitespace-nowrap pb-2 px-1 border-b-2 font-medium text-xs transition-colors
+                          ${selectedProvider === providerId
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}
+                        `}
+                      >
+                        {providerMap.get(providerId) || providerId}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              )}
+
               <div className="border rounded-md p-3 h-48 overflow-y-auto bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
-                {models.length === 0 ? (
-                  <p className="text-sm text-gray-500 p-2">No models available for benchmarking.</p>
+                {filteredModels.length === 0 ? (
+                  <p className="text-sm text-gray-500 p-2">No models found.</p>
                 ) : (
-                  models.map(model => (
+                  filteredModels.map(model => (
                     <div key={model.id} className="flex items-center space-x-2 mb-2 last:mb-0">
                       <input
                         type="checkbox"
