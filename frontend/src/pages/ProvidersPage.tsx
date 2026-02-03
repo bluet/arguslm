@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -51,21 +51,22 @@ type ProviderFieldConfig = {
   showOrgFields: boolean;
   apiKeyLabel?: string;
   baseUrlLabel?: string;
+  defaultBaseUrl?: string;
 };
 
 const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
-  openai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: true },
-  anthropic: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  openai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: true, defaultBaseUrl: 'https://api.openai.com/v1' },
+  anthropic: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.anthropic.com' },
   google_vertex: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
-  google_gemini: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  google_gemini: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
   aws_bedrock: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
   azure_openai: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
-  ollama: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL' },
-  lm_studio: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL' },
-  openrouter: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
-  together_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
-  groq: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
-  mistral: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  ollama: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:11434' },
+  lm_studio: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:1234/v1' },
+  openrouter: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://openrouter.ai/api/v1' },
+  together_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.together.xyz/v1' },
+  groq: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.groq.com/openai/v1' },
+  mistral: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.mistral.ai/v1' },
   custom_openai_compatible: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
 };
 
@@ -75,13 +76,23 @@ export const ProvidersPage = () => {
   const [expandedProviderId, setExpandedProviderId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, { success: boolean; message: string; latency?: number }>>({});
   const [connectionTestResult, setConnectionTestResult] = useState<{ success: boolean; message: string; latency?: number } | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   // Form state for new provider
   const [newProvider, setNewProvider] = useState<ProviderCreate>({
     name: '',
     provider_type: 'openai',
     api_key: '',
-    base_url: '',
+    base_url: PROVIDER_FIELD_CONFIG.openai.defaultBaseUrl || '',
     organization_id: '',
     project_id: '',
     region: '',
@@ -103,7 +114,7 @@ export const ProvidersPage = () => {
         name: '',
         provider_type: 'openai',
         api_key: '',
-        base_url: '',
+        base_url: PROVIDER_FIELD_CONFIG.openai.defaultBaseUrl || '',
         organization_id: '',
         project_id: '',
         region: '',
@@ -156,8 +167,11 @@ export const ProvidersPage = () => {
   const refreshModelsMutation = useMutation({
     mutationFn: refreshModels,
     onSuccess: () => {
-      // Maybe show a toast?
+      setNotification({ message: 'Models refreshed successfully', type: 'success' });
     },
+    onError: (error) => {
+      setNotification({ message: error instanceof Error ? error.message : 'Failed to refresh models', type: 'error' });
+    }
   });
 
   const handleCreate = (e: React.FormEvent) => {
@@ -232,12 +246,10 @@ export const ProvidersPage = () => {
                         <Activity className="w-3 h-3" />
                         {provider.is_enabled ? 'Active' : 'Disabled'}
                       </span>
-                      {provider.base_url && (
-                        <span className="flex items-center gap-1 font-mono text-xs truncate max-w-[200px]">
-                          <Globe className="w-3 h-3" />
-                          {provider.base_url}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1 font-mono text-xs truncate max-w-[200px]">
+                        <Globe className="w-3 h-3" />
+                        {provider.base_url || '(Default)'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -388,7 +400,15 @@ export const ProvidersPage = () => {
             label="Provider Type"
             options={PROVIDER_TYPES}
             value={newProvider.provider_type}
-            onChange={(e) => setNewProvider({ ...newProvider, provider_type: e.target.value as ProviderType })}
+            onChange={(e) => {
+              const providerType = e.target.value as ProviderType;
+              const config = PROVIDER_FIELD_CONFIG[providerType];
+              setNewProvider({ 
+                ...newProvider, 
+                provider_type: providerType,
+                base_url: config.defaultBaseUrl || ''
+              });
+            }}
           />
 
           {PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresApiKey && (
@@ -456,6 +476,16 @@ export const ProvidersPage = () => {
           </div>
         </form>
       </Modal>
+
+      {notification && (
+        <div className={`fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg border ${
+          notification.type === 'success' 
+            ? 'bg-green-900/90 border-green-800 text-green-100' 
+            : 'bg-red-900/90 border-red-800 text-red-100'
+        } animate-in slide-in-from-bottom-2 fade-in duration-300 z-50`}>
+          {notification.message}
+        </div>
+      )}
     </div>
   );
 };
