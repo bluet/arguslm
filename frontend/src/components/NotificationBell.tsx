@@ -92,9 +92,8 @@ export const NotificationBell: React.FC = () => {
         )}
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[450px] max-h-96 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
+        <div className="absolute left-0 mt-2 w-[380px] max-h-96 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
             <h3 className="text-sm font-semibold text-gray-100">Notifications</h3>
