@@ -73,7 +73,8 @@ class ModelResponse(BaseModel):
 class ModelListResponse(BaseModel):
     """Schema for paginated model list response."""
 
-    items: list[ModelResponse] = Field(..., description="List of models")
-    total: int = Field(..., description="Total number of models")
-    limit: int = Field(..., description="Limit used in query")
+    items: list[ModelResponse] = Field(..., description="List of models in this page")
+    total: int = Field(..., description="Total number of matching models in database")
+    has_more: bool = Field(..., description="Whether more items exist beyond this page")
+    limit: int = Field(..., description="Page size used in query")
     offset: int = Field(..., description="Offset used in query")

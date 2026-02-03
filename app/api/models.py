@@ -21,7 +21,7 @@ async def list_models(
     enabled_for_monitoring: Optional[bool] = Query(None, description="Filter by monitoring status"),
     enabled_for_benchmark: Optional[bool] = Query(None, description="Filter by benchmark status"),
     search: Optional[str] = Query(None, description="Search in model_id and custom_name"),
-    limit: int = Query(50, ge=1, le=200, description="Number of results to return"),
+    limit: int = Query(50, ge=1, le=500, description="Number of results per page (max 500)"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_db),
 ) -> ModelListResponse:
@@ -71,10 +71,13 @@ async def list_models(
 
     total = await db.scalar(count_query)
 
-    # Apply pagination and eager load provider_account
-    query = query.options(selectinload(Model.provider_account)).offset(offset).limit(limit)
+    query = (
+        query.order_by(Model.created_at, Model.id)
+        .options(selectinload(Model.provider_account))
+        .offset(offset)
+        .limit(limit)
+    )
 
-    # Execute query
     result = await db.execute(query)
     models = result.scalars().all()
 
@@ -87,9 +90,13 @@ async def list_models(
             )
         items.append(model_data)
 
+    total_count = total or 0
+    has_more = (offset + len(items)) < total_count
+
     return ModelListResponse(
         items=items,
-        total=total or 0,
+        total=total_count,
+        has_more=has_more,
         limit=limit,
         offset=offset,
     )
