@@ -44,6 +44,30 @@ const PROVIDER_TYPES: { value: ProviderType; label: string }[] = [
   { value: 'custom_openai_compatible', label: 'Custom OpenAI Compatible' },
 ];
 
+type ProviderFieldConfig = {
+  requiresApiKey: boolean;
+  requiresBaseUrl: boolean;
+  showOrgFields: boolean;
+  apiKeyLabel?: string;
+  baseUrlLabel?: string;
+};
+
+const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
+  openai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: true },
+  anthropic: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  google_vertex: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  google_gemini: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  aws_bedrock: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  azure_openai: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
+  ollama: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL' },
+  lm_studio: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL' },
+  openrouter: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  together_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  groq: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  mistral: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  custom_openai_compatible: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
+};
+
 export const ProvidersPage = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -354,35 +378,41 @@ export const ProvidersPage = () => {
             onChange={(e) => setNewProvider({ ...newProvider, provider_type: e.target.value as ProviderType })}
           />
 
-          <Input
-            label="API Key"
-            type="password"
-            placeholder="sk-..."
-            value={newProvider.api_key}
-            onChange={(e) => setNewProvider({ ...newProvider, api_key: e.target.value })}
-          />
+          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresApiKey && (
+            <Input
+              label={PROVIDER_FIELD_CONFIG[newProvider.provider_type].apiKeyLabel || "API Key"}
+              type="password"
+              placeholder="sk-..."
+              value={newProvider.api_key}
+              onChange={(e) => setNewProvider({ ...newProvider, api_key: e.target.value })}
+              required={PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresApiKey}
+            />
+          )}
 
           <Input
-            label="Base URL (Optional)"
+            label={PROVIDER_FIELD_CONFIG[newProvider.provider_type].baseUrlLabel || (PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresBaseUrl ? "Base URL" : "Base URL (Optional)")}
             placeholder="https://api.example.com/v1"
             value={newProvider.base_url}
             onChange={(e) => setNewProvider({ ...newProvider, base_url: e.target.value })}
+            required={PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresBaseUrl}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Organization ID (Optional)"
-              placeholder="org-..."
-              value={newProvider.organization_id}
-              onChange={(e) => setNewProvider({ ...newProvider, organization_id: e.target.value })}
-            />
-            <Input
-              label="Project ID (Optional)"
-              placeholder="my-project-id"
-              value={newProvider.project_id}
-              onChange={(e) => setNewProvider({ ...newProvider, project_id: e.target.value })}
-            />
-          </div>
+          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showOrgFields && (
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Organization ID (Optional)"
+                placeholder="org-..."
+                value={newProvider.organization_id}
+                onChange={(e) => setNewProvider({ ...newProvider, organization_id: e.target.value })}
+              />
+              <Input
+                label="Project ID (Optional)"
+                placeholder="my-project-id"
+                value={newProvider.project_id}
+                onChange={(e) => setNewProvider({ ...newProvider, project_id: e.target.value })}
+              />
+            </div>
+          )}
         </form>
       </Modal>
     </div>
