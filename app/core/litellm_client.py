@@ -276,18 +276,23 @@ class LiteLLMClient:
                     f"for model {config.model}"
                 )
 
-                response = await acompletion(
-                    model=config.model,
-                    messages=config.messages,
-                    temperature=config.temperature,
-                    max_tokens=config.max_tokens,
-                    stream=False,
-                    timeout=config.timeout,
-                    api_key=config.api_key,
-                    api_base=config.api_base,
-                    metadata=config.metadata,
+                # Build kwargs, omitting None api_key/api_base (for local providers like LM Studio)
+                completion_kwargs = {
+                    "model": config.model,
+                    "messages": config.messages,
+                    "temperature": config.temperature,
+                    "max_tokens": config.max_tokens,
+                    "stream": False,
+                    "timeout": config.timeout,
+                    "metadata": config.metadata,
                     **kwargs,
-                )
+                }
+                if config.api_key:
+                    completion_kwargs["api_key"] = config.api_key
+                if config.api_base:
+                    completion_kwargs["api_base"] = config.api_base
+
+                response = await acompletion(**completion_kwargs)
 
                 logger.debug(f"Completion successful for model {config.model}")
                 return response
@@ -343,18 +348,23 @@ class LiteLLMClient:
                     f"Streaming attempt {attempt + 1}/{config.max_retries} for model {config.model}"
                 )
 
-                response = await acompletion(
-                    model=config.model,
-                    messages=config.messages,
-                    temperature=config.temperature,
-                    max_tokens=config.max_tokens,
-                    stream=True,
-                    timeout=config.timeout,
-                    api_key=config.api_key,
-                    api_base=config.api_base,
-                    metadata=config.metadata,
+                # Build kwargs, omitting None api_key/api_base (for local providers like LM Studio)
+                stream_kwargs = {
+                    "model": config.model,
+                    "messages": config.messages,
+                    "temperature": config.temperature,
+                    "max_tokens": config.max_tokens,
+                    "stream": True,
+                    "timeout": config.timeout,
+                    "metadata": config.metadata,
                     **kwargs,
-                )
+                }
+                if config.api_key:
+                    stream_kwargs["api_key"] = config.api_key
+                if config.api_base:
+                    stream_kwargs["api_base"] = config.api_base
+
+                response = await acompletion(**stream_kwargs)
 
                 # Stream chunks
                 async for chunk in response:
