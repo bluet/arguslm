@@ -56,6 +56,12 @@ async def check_uptime(model: "Model") -> UptimeCheck:
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
 
+    # LiteLLM with openai/ prefix requires an api_key (creates "Bearer {api_key}" header).
+    # For local servers like LM Studio that don't require auth, use a dummy key
+    # to prevent LiteLLM from sending "Bearer None" which causes streaming errors.
+    if not api_key and api_base:
+        api_key = "not-needed"
+
     client = LiteLLMClient()
     collector = MetricsCollector()
     collector.start()

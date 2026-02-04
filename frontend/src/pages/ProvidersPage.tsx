@@ -106,7 +106,7 @@ export const ProvidersPage = () => {
 
   const createMutation = useMutation({
     mutationFn: createProvider,
-    onSuccess: () => {
+    onSuccess: async (newProvider) => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
       setIsAddModalOpen(false);
       setConnectionTestResult(null);
@@ -120,6 +120,13 @@ export const ProvidersPage = () => {
         region: '',
         is_enabled: true,
       });
+      try {
+        await refreshModels(newProvider.id);
+        queryClient.invalidateQueries({ queryKey: ['models'] });
+        setNotification({ message: 'Provider created and models discovered', type: 'success' });
+      } catch {
+        setNotification({ message: 'Provider created but model discovery failed', type: 'error' });
+      }
     },
   });
 

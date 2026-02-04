@@ -193,6 +193,10 @@ async def benchmark_single_model(
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
 
+    # LiteLLM openai/ prefix needs api_key; use dummy for local servers (LM Studio, Ollama)
+    if not api_key and api_base:
+        api_key = "not-needed"
+
     async with (
         semaphores["global"],
         semaphores["provider"][provider_key],
