@@ -39,12 +39,30 @@ The easiest way to get started is using Docker Compose, which sets up the backen
    cd arguslm
    ```
 
-2. **Start the services**:
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Generate required secrets (choose one method):
+   
+   # Option A: Python script (requires cryptography package)
+   python scripts/generate-secrets.py >> .env
+   
+   # Option B: Docker one-liner (no local Python needed)
+   docker run --rm python:3.11-slim sh -c "pip install -q cryptography && python -c '
+     from cryptography.fernet import Fernet
+     import secrets
+     print(f\"ENCRYPTION_KEY={Fernet.generate_key().decode()}\")
+     print(f\"SECRET_KEY={secrets.token_urlsafe(32)}\")
+     print(f\"DB_PASSWORD={secrets.token_urlsafe(24)}\")
+   '" >> .env
+   ```
+
+3. **Start the services**:
    ```bash
    docker compose up -d
    ```
 
-3. **Access the application**:
+4. **Access the application**:
    - Web UI: [http://localhost:3000](http://localhost:3000)
    - API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
 
