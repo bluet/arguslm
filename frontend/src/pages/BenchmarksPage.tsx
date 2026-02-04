@@ -105,7 +105,10 @@ export default function BenchmarksPage() {
   useEffect(() => {
     if (!isRunning || !currentRunId) return;
 
-    const wsUrl = `ws://localhost:8000/api/v1/benchmarks/${currentRunId}/stream`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    const wsHost = apiUrl.replace(/^https?:\/\//, '');
+    const wsUrl = `${wsProtocol}://${wsHost}/api/v1/benchmarks/${currentRunId}/stream`;
     console.log('Connecting to WebSocket:', wsUrl);
     
     const ws = new WebSocket(wsUrl);
