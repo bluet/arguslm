@@ -2,7 +2,18 @@
  * Export API functions for downloading benchmark and uptime data
  */
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Sanitize filename to prevent path traversal and XSS attacks.
+ */
+function sanitizeFilename(filename: string): string {
+  return filename
+    .replace(/[/\\]/g, '_')           // path separators
+    .replace(/[<>:"|?*]/g, '_')       // Windows forbidden chars
+    .replace(/[\x00-\x1f\x7f]/g, '')  // control characters
+    .slice(0, 255);                   // max filename length
+}
 
 /**
  * Export benchmark results as JSON or CSV
@@ -27,7 +38,7 @@ export async function exportBenchmark(runId: string, format: 'json' | 'csv'): Pr
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = filename;
+    link.download = sanitizeFilename(filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -80,7 +91,7 @@ export async function exportUptimeHistory(
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = filename;
+    link.download = sanitizeFilename(filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -298,7 +298,7 @@ async def test_new_provider_connection(
             model=test_model,
             messages=[{"role": "user", "content": "test"}],
             max_tokens=10,
-            api_key=api_key or "sk-not-needed",
+            api_key=api_key,
             api_base=api_base,
         )
 
@@ -385,7 +385,7 @@ async def test_provider_connection(
             model=test_model,
             messages=[{"role": "user", "content": "test"}],
             max_tokens=10,
-            api_key=api_key or "sk-not-needed",
+            api_key=api_key,
             api_base=api_base,
         )
 

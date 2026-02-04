@@ -209,7 +209,7 @@ async def benchmark_single_model(
                 model=litellm_model,
                 messages=[{"role": "user", "content": prompt_pack}],
                 max_tokens=max_tokens,
-                api_key=api_key or "sk-not-needed",
+                api_key=api_key,
                 api_base=api_base,
             )
 

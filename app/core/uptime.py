@@ -68,7 +68,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
             max_tokens=100,
             temperature=1,
             timeout=15,
-            api_key=api_key or "sk-not-needed",
+            api_key=api_key,
             api_base=api_base,
         ):
             content = extract_chunk_content(chunk)
