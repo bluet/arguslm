@@ -62,6 +62,24 @@ GOOGLE_GEMINI_MODELS: list[dict] = [
     {"id": "gemini-1.5-flash-8b", "owned_by": "google"},
 ]
 
+# Google Vertex AI curated model registry
+# Ref: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
+GOOGLE_VERTEX_MODELS: list[dict] = [
+    {"id": "gemini-2.0-flash-001", "owned_by": "google"},
+    {"id": "gemini-2.0-pro-exp-02-05", "owned_by": "google"},
+    {"id": "gemini-1.5-pro-002", "owned_by": "google"},
+    {"id": "gemini-1.5-flash-002", "owned_by": "google"},
+    {"id": "gemini-1.0-pro-002", "owned_by": "google"},
+    {"id": "claude-3-5-sonnet-v2@20241022", "owned_by": "anthropic"},
+    {"id": "claude-3-5-haiku@20241022", "owned_by": "anthropic"},
+    {"id": "claude-3-opus@20240229", "owned_by": "anthropic"},
+    {"id": "claude-3-haiku@20240307", "owned_by": "anthropic"},
+    {"id": "llama-3.2-90b-vision-instruct-maas", "owned_by": "meta"},
+    {"id": "llama-3.1-405b-instruct-maas", "owned_by": "meta"},
+    {"id": "mistral-large@2407", "owned_by": "mistral"},
+    {"id": "mistral-nemo@2407", "owned_by": "mistral"},
+]
+
 # AWS Bedrock curated model registry
 # Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
 # Updated: 2025-02
@@ -113,6 +131,7 @@ STATIC_REGISTRIES: dict[str, list[dict]] = {
     "anthropic": ANTHROPIC_MODELS,
     "mistral": MISTRAL_MODELS,
     "google_gemini": GOOGLE_GEMINI_MODELS,
+    "google_vertex": GOOGLE_VERTEX_MODELS,
     "aws_bedrock": AWS_BEDROCK_MODELS,
 }
 

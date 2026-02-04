@@ -23,6 +23,7 @@ interface BackendProviderResponse {
   display_name: string;
   enabled: boolean;
   base_url: string | null;
+  region: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +49,7 @@ function transformFromBackendFormat(response: BackendProviderResponse): Provider
     name: response.display_name,
     provider_type: response.provider_type as Provider['provider_type'],
     base_url: response.base_url ?? undefined,
+    region: response.region ?? undefined,
     is_enabled: response.enabled,
     created_at: response.created_at,
     updated_at: response.updated_at,

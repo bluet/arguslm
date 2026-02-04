@@ -21,6 +21,8 @@ import {
   testProviderConnection,
   refreshModels 
 } from '../api/providers';
+import { modelsApi } from '../api/models';
+import { CreateModelData } from '../types/model';
 import { Provider, ProviderCreate, ProviderType } from '../types/provider';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -71,6 +73,41 @@ const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
   custom_openai_compatible: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
 };
 
+const AWS_BEDROCK_REGIONS = [
+  { value: 'us-east-1', label: 'US East (N. Virginia)' },
+  { value: 'us-east-2', label: 'US East (Ohio)' },
+  { value: 'us-west-1', label: 'US West (N. California)' },
+  { value: 'us-west-2', label: 'US West (Oregon)' },
+  { value: 'ca-central-1', label: 'Canada (Central)' },
+  { value: 'ca-west-1', label: 'Canada West (Calgary)' },
+  { value: 'sa-east-1', label: 'South America (Sao Paulo)' },
+  { value: 'eu-west-1', label: 'Europe (Ireland)' },
+  { value: 'eu-west-2', label: 'Europe (London)' },
+  { value: 'eu-west-3', label: 'Europe (Paris)' },
+  { value: 'eu-central-1', label: 'Europe (Frankfurt)' },
+  { value: 'eu-central-2', label: 'Europe (Zurich)' },
+  { value: 'eu-north-1', label: 'Europe (Stockholm)' },
+  { value: 'eu-south-1', label: 'Europe (Milan)' },
+  { value: 'eu-south-2', label: 'Europe (Spain)' },
+  { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+  { value: 'ap-northeast-2', label: 'Asia Pacific (Seoul)' },
+  { value: 'ap-northeast-3', label: 'Asia Pacific (Osaka)' },
+  { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+  { value: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
+  { value: 'ap-southeast-3', label: 'Asia Pacific (Jakarta)' },
+  { value: 'ap-southeast-4', label: 'Asia Pacific (Melbourne)' },
+  { value: 'ap-southeast-5', label: 'Asia Pacific (Malaysia)' },
+  { value: 'ap-southeast-7', label: 'Asia Pacific (Thailand)' },
+  { value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
+  { value: 'ap-south-2', label: 'Asia Pacific (Hyderabad)' },
+  { value: 'ap-east-2', label: 'Asia Pacific (Taipei)' },
+  { value: 'af-south-1', label: 'Africa (Cape Town)' },
+  { value: 'me-south-1', label: 'Middle East (Bahrain)' },
+  { value: 'me-central-1', label: 'Middle East (UAE)' },
+  { value: 'il-central-1', label: 'Israel (Tel Aviv)' },
+  { value: 'mx-central-1', label: 'Mexico (Central)' },
+];
+
 export const ProvidersPage = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -78,6 +115,8 @@ export const ProvidersPage = () => {
   const [testResults, setTestResults] = useState<Record<string, { success: boolean; message: string; latency?: number }>>({});
   const [connectionTestResult, setConnectionTestResult] = useState<{ success: boolean; message: string; latency?: number } | null>(null);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [addModelProviderId, setAddModelProviderId] = useState<string | null>(null);
+  const [newModelId, setNewModelId] = useState('');
 
   useEffect(() => {
     if (notification) {
@@ -181,6 +220,31 @@ export const ProvidersPage = () => {
       setNotification({ message: error instanceof Error ? error.message : 'Failed to refresh models', type: 'error' });
     }
   });
+
+  const addModelMutation = useMutation({
+    mutationFn: (data: CreateModelData) => modelsApi.createModel(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['models'] });
+      setAddModelProviderId(null);
+      setNewModelId('');
+      setNotification({ message: 'Model added successfully', type: 'success' });
+    },
+    onError: (error) => {
+      setNotification({ message: error instanceof Error ? error.message : 'Failed to add model', type: 'error' });
+    }
+  });
+
+  const handleAddModel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (addModelProviderId && newModelId.trim()) {
+      addModelMutation.mutate({
+        provider_account_id: addModelProviderId,
+        model_id: newModelId.trim(),
+        enabled_for_monitoring: true,
+        enabled_for_benchmark: false,
+      });
+    }
+  };
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,6 +373,14 @@ export const ProvidersPage = () => {
                         placeholder="https://api.example.com/v1"
                         onBlur={(e) => updateMutation.mutate({ id: provider.id, data: { base_url: e.target.value } })}
                       />
+                      {provider.provider_type === 'aws_bedrock' && (
+                        <Select
+                          label="AWS Region"
+                          options={AWS_BEDROCK_REGIONS}
+                          value={provider.region || 'us-east-1'}
+                          onChange={(e) => updateMutation.mutate({ id: provider.id, data: { region: e.target.value } })}
+                        />
+                      )}
                     </div>
                     
                     <div className="space-y-4">
@@ -340,17 +412,29 @@ export const ProvidersPage = () => {
                         )}
                       </div>
 
-                      <div className="p-4 rounded-lg bg-gray-900/50 border border-gray-800 flex items-center justify-between">
-                        <span className="text-sm text-gray-300">Model Catalog</span>
-                        <Button 
-                          size="sm" 
-                          variant="secondary"
-                          icon={<RefreshCw className="w-3 h-3" />}
-                          onClick={() => refreshModelsMutation.mutate(provider.id)}
-                          isLoading={refreshModelsMutation.isPending && refreshModelsMutation.variables === provider.id}
-                        >
-                          Refresh Models
-                        </Button>
+                      <div className="p-4 rounded-lg bg-gray-900/50 border border-gray-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Model Catalog</span>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="secondary"
+                              icon={<Plus className="w-3 h-3" />}
+                              onClick={() => setAddModelProviderId(provider.id)}
+                            >
+                              Add Model
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="secondary"
+                              icon={<RefreshCw className="w-3 h-3" />}
+                              onClick={() => refreshModelsMutation.mutate(provider.id)}
+                              isLoading={refreshModelsMutation.isPending && refreshModelsMutation.variables === provider.id}
+                            >
+                              Refresh
+                            </Button>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-gray-800 flex justify-end">
@@ -441,15 +525,7 @@ export const ProvidersPage = () => {
           {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showRegionField && (
             <Select
               label="AWS Region"
-              options={[
-                { value: 'us-east-1', label: 'US East (N. Virginia)' },
-                { value: 'us-west-2', label: 'US West (Oregon)' },
-                { value: 'eu-west-1', label: 'Europe (Ireland)' },
-                { value: 'eu-central-1', label: 'Europe (Frankfurt)' },
-                { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
-                { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
-                { value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
-              ]}
+              options={AWS_BEDROCK_REGIONS}
               value={newProvider.region || 'us-east-1'}
               onChange={(e) => setNewProvider({ ...newProvider, region: e.target.value })}
             />
@@ -499,6 +575,37 @@ export const ProvidersPage = () => {
               </div>
             )}
           </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={addModelProviderId !== null}
+        onClose={() => { setAddModelProviderId(null); setNewModelId(''); }}
+        title="Add Model"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => { setAddModelProviderId(null); setNewModelId(''); }}>Cancel</Button>
+            <Button onClick={handleAddModel} isLoading={addModelMutation.isPending} disabled={!newModelId.trim()}>Add Model</Button>
+          </>
+        }
+      >
+        <form onSubmit={handleAddModel} className="space-y-4">
+          <p className="text-sm text-gray-400 mb-4">
+            Add a model to this provider for monitoring. The model ID should match the provider's naming convention.
+          </p>
+          <Input
+            label="Model ID"
+            placeholder={
+              providers?.find(p => p.id === addModelProviderId)?.provider_type === 'azure_openai'
+                ? 'e.g. my-gpt4-deployment'
+                : providers?.find(p => p.id === addModelProviderId)?.provider_type === 'aws_bedrock'
+                ? 'e.g. anthropic.claude-3-sonnet-20240229-v1:0'
+                : 'e.g. gpt-4o, claude-3-opus-20240229'
+            }
+            value={newModelId}
+            onChange={(e) => setNewModelId(e.target.value)}
+            required
+          />
         </form>
       </Modal>
 

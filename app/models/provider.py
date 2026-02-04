@@ -59,6 +59,11 @@ class ProviderAccount(BaseModel):
         """Extract base_url from credentials for display (non-sensitive)."""
         return self.credentials.get("base_url")
 
+    @property
+    def region(self) -> str | None:
+        """Extract region from credentials for display (non-sensitive)."""
+        return self.credentials.get("region")
+
     def __repr__(self) -> str:
         """String representation."""
         return (

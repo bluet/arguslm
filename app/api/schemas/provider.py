@@ -55,6 +55,7 @@ class ProviderResponse(BaseModel):
     display_name: str = Field(..., description="Display name")
     enabled: bool = Field(..., description="Whether account is enabled")
     base_url: str | None = Field(None, description="Base URL for the provider (non-sensitive)")
+    region: str | None = Field(None, description="AWS region (for AWS Bedrock)")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
