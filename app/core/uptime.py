@@ -1,5 +1,6 @@
 """Lightweight uptime health checks for LLM models."""
 
+import logging
 from typing import TYPE_CHECKING
 
 from app.core.litellm_client import LiteLLMClient
@@ -9,13 +10,19 @@ from app.models.monitoring import UptimeCheck
 if TYPE_CHECKING:
     from app.models.model import Model
 
+logger = logging.getLogger(__name__)
+
 
 LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
     "openai": "",
     "anthropic": "anthropic/",
     "azure": "azure/",
+    "azure_openai": "azure/",
     "bedrock": "bedrock/",
+    "aws_bedrock": "bedrock/",
     "vertex_ai": "vertex_ai/",
+    "google_vertex": "vertex_ai/",
+    "google_gemini": "gemini/",
     "cohere": "cohere/",
     "together_ai": "together_ai/",
     "groq": "groq/",
@@ -52,6 +59,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
         UptimeCheck with status, latency_ms, ttft_ms, tps, output_tokens
     """
     provider_account = getattr(model, "provider_account", None)
+    provider_type = getattr(provider_account, "provider_type", None)
     credentials = provider_account.credentials if provider_account else {}
     api_key = credentials.get("api_key")
     api_base = credentials.get("base_url")
@@ -62,12 +70,20 @@ async def check_uptime(model: "Model") -> UptimeCheck:
     if not api_key and api_base:
         api_key = "not-needed"
 
+    extra_kwargs: dict = {}
+    if provider_type == "aws_bedrock":
+        extra_kwargs["aws_region_name"] = credentials.get("region", "us-east-1")
+
     client = LiteLLMClient()
     collector = MetricsCollector()
     collector.start()
 
     try:
         litellm_model = _get_litellm_model_name(model)
+        logger.info(
+            f"check_uptime: model={litellm_model}, api_key_set={bool(api_key)}, "
+            f"api_base={api_base}, provider={provider_type}"
+        )
         async for chunk in client.complete_stream(
             model=litellm_model,
             messages=[{"role": "user", "content": HEALTH_CHECK_PROMPT}],
@@ -76,6 +92,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
             timeout=15,
             api_key=api_key,
             api_base=api_base,
+            **extra_kwargs,
         ):
             content = extract_chunk_content(chunk)
             if content:
@@ -92,6 +109,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
             output_tokens=metrics["output_tokens"],
         )
     except Exception as e:
+        logger.error(f"check_uptime FAILED for {model.model_id}: {e}", exc_info=True)
         return UptimeCheck(
             model_id=model.id,
             status="down",

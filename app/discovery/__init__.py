@@ -2,10 +2,11 @@
 
 This module provides adapters for discovering available models from different
 LLM providers, supporting:
-- Discoverable providers (OpenAI, Ollama) via API calls
+- Discoverable providers (OpenAI, Azure OpenAI, Ollama) via API calls
 - Static/curated providers (Anthropic, Mistral) from built-in registry
 """
 
+from app.discovery.azure import AzureOpenAIModelSource
 from app.discovery.base import ModelDescriptor, ModelSource
 from app.discovery.ollama import OllamaModelSource
 from app.discovery.openai import OpenAIModelSource
@@ -15,6 +16,7 @@ __all__ = [
     "ModelDescriptor",
     "ModelSource",
     "OpenAIModelSource",
+    "AzureOpenAIModelSource",
     "OllamaModelSource",
     "StaticModelSource",
     "get_source_for_provider",

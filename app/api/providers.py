@@ -21,6 +21,7 @@ from app.api.schemas.provider import (
 from app.core.litellm_client import LiteLLMClient
 from app.db.init import get_db
 from app.discovery import get_source_for_provider
+from app.discovery.azure import AzureOpenAIModelSource
 from app.discovery.ollama import OllamaModelSource
 from app.discovery.openai import OpenAIModelSource
 from app.models.model import Model
@@ -443,10 +444,11 @@ async def refresh_provider_models(
             detail="Provider type is missing or invalid",
         )
 
-    # Get appropriate model source
     model_source = None
     if provider.provider_type == "ollama":
         model_source = OllamaModelSource()
+    elif provider.provider_type == "azure_openai":
+        model_source = AzureOpenAIModelSource()
     elif provider.provider_type in [
         "openai",
         "openrouter",
@@ -457,7 +459,6 @@ async def refresh_provider_models(
     ]:
         model_source = OpenAIModelSource()
     else:
-        # Try static source
         model_source = get_source_for_provider(provider.provider_type)
 
     if not model_source:

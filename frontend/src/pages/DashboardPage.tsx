@@ -55,9 +55,11 @@ const DashboardPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [timeRange]);
 
-  const formatTime = (dateString: string) => {
+  const formatTimeWithTimezone = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const tzAbbr = date.toLocaleTimeString([], { timeZoneName: 'short' }).split(' ').pop() || '';
+    return `${timeStr} ${tzAbbr}`;
   };
 
   const formatRelativeTime = (dateString: string) => {
@@ -202,15 +204,29 @@ const DashboardPage: React.FC = () => {
                   {check.status.toUpperCase()}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Latency</span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  {check.latency_ms ? `${Math.round(check.latency_ms)}ms` : '-'}
-                </span>
+              <div className="grid grid-cols-3 gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-center">
+                  <span className="block text-xs">Latency</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {check.latency_ms ? `${Math.round(check.latency_ms)}ms` : '-'}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-xs">TTFT</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {check.ttft_ms ? `${Math.round(check.ttft_ms)}ms` : '-'}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-xs">TPS</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {check.tps ? `${check.tps.toFixed(1)}` : '-'}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-2">
                 <span>Checked</span>
-                <span>{formatTime(check.created_at)}</span>
+                <span>{formatTimeWithTimezone(check.created_at)}</span>
               </div>
             </div>
           ))}
@@ -367,12 +383,12 @@ const DashboardPage: React.FC = () => {
 
         {/* Right Column: Latency Bar Chart & Recent Activity */}
         <div className="space-y-6">
-          {/* Latency Comparison */}
+          {/* Performance Comparison */}
           <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Latency by Model</h2>
-            <div className="h-[300px]">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Performance by Model</h2>
+            <div className="h-[400px]">
               {data?.latencyComparison && data.latencyComparison.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.latencyComparison} layout="vertical" margin={{ left: 10, right: 30 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB" />
                     <XAxis 
@@ -381,27 +397,33 @@ const DashboardPage: React.FC = () => {
                       tick={{ fontSize: 12, fill: '#6B7280' }}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `${value}ms`}
                     />
                     <YAxis 
                       dataKey="model_name" 
                       type="category" 
                       width={100}
-                      tick={{ fontSize: 12, fill: '#6B7280' }}
+                      tick={{ fontSize: 11, fill: '#6B7280' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <Tooltip 
                       cursor={{ fill: '#F3F4F6' }}
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number | undefined) => [`${Math.round(Number(value || 0))}ms`, 'Latency']}
+                      formatter={(value, name) => {
+                        const v = Number(value ?? 0);
+                        if (name === 'tps') return [`${v.toFixed(1)} tok/s`, 'TPS'];
+                        return [`${Math.round(v)}ms`, name === 'latency' ? 'Latency' : 'TTFT'];
+                      }}
                     />
-                    <Bar dataKey="latency" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} />
+                    <Legend />
+                    <Bar dataKey="latency" name="Latency (ms)" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={8} />
+                    <Bar dataKey="ttft" name="TTFT (ms)" fill="#10B981" radius={[0, 4, 4, 0]} barSize={8} />
+                    <Bar dataKey="tps" name="TPS" fill="#F59E0B" radius={[0, 4, 4, 0]} barSize={8} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-                  <p>No latency data available</p>
+                  <p>No performance data available</p>
                 </div>
               )}
             </div>

@@ -96,6 +96,8 @@ export const ModelsPage = () => {
     queryFn: listProviders,
   });
 
+  const selectedProvider = providers.find(p => p.id === newModelData.provider_account_id);
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -283,23 +285,41 @@ export const ModelsPage = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Provider Account ID
+              Provider
             </label>
-            <Input
-              placeholder="e.g. openai-account-1"
+            <select
               value={newModelData.provider_account_id}
               onChange={(e) => setNewModelData({ ...newModelData, provider_account_id: e.target.value })}
-            />
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-50"
+            >
+              <option value="" disabled>Select a provider</option>
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Model ID
             </label>
             <Input
-              placeholder="e.g. gpt-4-turbo"
+              placeholder={
+                selectedProvider?.provider_type === 'azure_openai'
+                  ? "e.g. my-gpt4-deployment"
+                  : selectedProvider?.provider_type === 'openai'
+                  ? "e.g. gpt-4o"
+                  : "e.g. gpt-4-turbo"
+              }
               value={newModelData.model_id}
               onChange={(e) => setNewModelData({ ...newModelData, model_id: e.target.value })}
             />
+            {selectedProvider?.provider_type === 'azure_openai' && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                For Azure OpenAI, enter your deployment name (e.g., 'my-gpt4-deployment')
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

@@ -134,7 +134,9 @@ export function processLatencyComparison(uptimeChecks: UptimeCheck[]): LatencyMe
     .filter(c => c.latency_ms !== null)
     .map(c => ({
       model_name: c.model_name,
-      latency: c.latency_ms!
+      latency: c.latency_ms!,
+      ttft: c.ttft_ms ?? 0,
+      tps: c.tps ?? 0
     }));
 }
 

@@ -49,6 +49,7 @@ type ProviderFieldConfig = {
   requiresApiKey: boolean;
   requiresBaseUrl: boolean;
   showOrgFields: boolean;
+  showRegionField?: boolean;
   apiKeyLabel?: string;
   baseUrlLabel?: string;
   defaultBaseUrl?: string;
@@ -59,7 +60,7 @@ const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
   anthropic: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.anthropic.com' },
   google_vertex: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
   google_gemini: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
-  aws_bedrock: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
+  aws_bedrock: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, showRegionField: true, apiKeyLabel: 'Bearer Token (from AWS Bedrock Console)' },
   azure_openai: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
   ollama: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:11434' },
   lm_studio: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:1234/v1' },
@@ -436,6 +437,23 @@ export const ProvidersPage = () => {
             onChange={(e) => setNewProvider({ ...newProvider, base_url: e.target.value })}
             required={PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresBaseUrl}
           />
+
+          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showRegionField && (
+            <Select
+              label="AWS Region"
+              options={[
+                { value: 'us-east-1', label: 'US East (N. Virginia)' },
+                { value: 'us-west-2', label: 'US West (Oregon)' },
+                { value: 'eu-west-1', label: 'Europe (Ireland)' },
+                { value: 'eu-central-1', label: 'Europe (Frankfurt)' },
+                { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+                { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+                { value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
+              ]}
+              value={newProvider.region || 'us-east-1'}
+              onChange={(e) => setNewProvider({ ...newProvider, region: e.target.value })}
+            />
+          )}
 
           {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showOrgFields && (
             <div className="grid grid-cols-2 gap-4">

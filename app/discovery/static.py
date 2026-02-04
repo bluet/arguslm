@@ -62,11 +62,58 @@ GOOGLE_GEMINI_MODELS: list[dict] = [
     {"id": "gemini-1.5-flash-8b", "owned_by": "google"},
 ]
 
+# AWS Bedrock curated model registry
+# Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+# Updated: 2025-02
+AWS_BEDROCK_MODELS: list[dict] = [
+    # Claude 4.x series
+    {"id": "anthropic.claude-opus-4-5-20251101-v1:0", "owned_by": "anthropic"},
+    {"id": "anthropic.claude-sonnet-4-5-20250929-v1:0", "owned_by": "anthropic"},
+    {"id": "anthropic.claude-haiku-4-5-20251001-v1:0", "owned_by": "anthropic"},
+    {"id": "anthropic.claude-opus-4-1-20250805-v1:0", "owned_by": "anthropic"},
+    {"id": "anthropic.claude-sonnet-4-20250514-v1:0", "owned_by": "anthropic"},
+    # Claude 3.x series
+    {"id": "anthropic.claude-3-5-haiku-20241022-v1:0", "owned_by": "anthropic"},
+    {"id": "anthropic.claude-3-haiku-20240307-v1:0", "owned_by": "anthropic"},
+    # Meta Llama 4 models
+    {"id": "meta.llama4-maverick-17b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama4-scout-17b-instruct-v1:0", "owned_by": "meta"},
+    # Meta Llama 3.x models
+    {"id": "meta.llama3-3-70b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-2-90b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-2-11b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-2-3b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-2-1b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-1-405b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-1-70b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-1-8b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-70b-instruct-v1:0", "owned_by": "meta"},
+    {"id": "meta.llama3-8b-instruct-v1:0", "owned_by": "meta"},
+    # Mistral models
+    {"id": "mistral.mistral-large-3-675b-instruct", "owned_by": "mistral"},
+    {"id": "mistral.mistral-large-2407-v1:0", "owned_by": "mistral"},
+    {"id": "mistral.mistral-small-2402-v1:0", "owned_by": "mistral"},
+    {"id": "mistral.mixtral-8x7b-instruct-v0:1", "owned_by": "mistral"},
+    {"id": "mistral.mistral-7b-instruct-v0:2", "owned_by": "mistral"},
+    # Amazon Titan text models
+    {"id": "amazon.titan-text-premier-v1:0", "owned_by": "amazon"},
+    {"id": "amazon.titan-text-express-v1", "owned_by": "amazon"},
+    {"id": "amazon.titan-text-lite-v1", "owned_by": "amazon"},
+    {"id": "amazon.titan-tg1-large", "owned_by": "amazon"},
+    # Cohere models
+    {"id": "cohere.command-r-plus-v1:0", "owned_by": "cohere"},
+    {"id": "cohere.command-r-v1:0", "owned_by": "cohere"},
+    # AI21 Labs models
+    {"id": "ai21.jamba-1-5-large-v1:0", "owned_by": "ai21"},
+    {"id": "ai21.jamba-1-5-mini-v1:0", "owned_by": "ai21"},
+]
+
 # Registry mapping provider types to curated model lists
 STATIC_REGISTRIES: dict[str, list[dict]] = {
     "anthropic": ANTHROPIC_MODELS,
     "mistral": MISTRAL_MODELS,
     "google_gemini": GOOGLE_GEMINI_MODELS,
+    "aws_bedrock": AWS_BEDROCK_MODELS,
 }
 
 
