@@ -13,10 +13,12 @@ from app.api.schemas.monitoring import (
     MonitoringConfigResponse,
     MonitoringConfigUpdate,
     MonitoringRunResponse,
+    PromptPackResponse,
     UptimeCheckResponse,
     UptimeHistoryResponse,
 )
 from app.core.alert_evaluator import evaluate_alerts
+from app.core.prompt_packs import VALID_PROMPT_PACK_IDS, list_prompt_packs
 from app.core.scheduler import configure_scheduler
 from app.core.uptime import check_uptime
 from app.db.init import get_db
@@ -24,9 +26,6 @@ from app.models.model import Model
 from app.models.monitoring import MonitoringConfig, UptimeCheck
 
 router = APIRouter(prefix="/api/v1/monitoring", tags=["monitoring"])
-
-# Valid prompt packs
-VALID_PROMPT_PACKS = {"shakespeare", "synthetic_short", "synthetic_medium", "synthetic_long"}
 
 
 async def get_or_create_default_config(db: AsyncSession) -> MonitoringConfig:
@@ -38,7 +37,7 @@ async def get_or_create_default_config(db: AsyncSession) -> MonitoringConfig:
     if config is None:
         config = MonitoringConfig(
             interval_minutes=15,
-            prompt_pack="shakespeare",
+            prompt_pack="health_check",
             enabled=True,
         )
         db.add(config)
@@ -82,10 +81,10 @@ async def update_monitoring_config(
 
     # Validate prompt_pack
     if update.prompt_pack is not None:
-        if update.prompt_pack not in VALID_PROMPT_PACKS:
+        if update.prompt_pack not in VALID_PROMPT_PACK_IDS:
             raise HTTPException(
                 status_code=400,
-                detail=f"prompt_pack must be one of: {', '.join(VALID_PROMPT_PACKS)}",
+                detail=f"prompt_pack must be one of: {', '.join(sorted(VALID_PROMPT_PACK_IDS))}",
             )
         config.prompt_pack = update.prompt_pack
 
@@ -107,6 +106,9 @@ async def run_uptime_checks_task() -> None:
 
     async with AsyncSessionLocal() as db:
         try:
+            config = await get_or_create_default_config(db)
+            prompt_pack = config.prompt_pack or "health_check"
+
             stmt = (
                 select(Model)
                 .where(Model.enabled_for_monitoring == True)
@@ -117,13 +119,12 @@ async def run_uptime_checks_task() -> None:
 
             uptime_checks: list[UptimeCheck] = []
             for model in models:
-                uptime_check = await check_uptime(model)
+                uptime_check = await check_uptime(model, prompt_pack=prompt_pack)
                 db.add(uptime_check)
                 uptime_checks.append(uptime_check)
 
             await evaluate_alerts(db, uptime_checks)
 
-            config = await get_or_create_default_config(db)
             config.last_run_at = datetime.now(datetime.now().astimezone().tzinfo)
             await db.commit()
         except Exception as e:
@@ -355,3 +356,17 @@ async def export_uptime_history(
         media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/prompt-packs", response_model=list[PromptPackResponse])
+async def get_prompt_packs() -> list[PromptPackResponse]:
+    """List available prompt packs for monitoring configuration."""
+    return [
+        PromptPackResponse(
+            id=pack.id,
+            name=pack.name,
+            prompt=pack.prompt,
+            expected_tokens=pack.expected_tokens,
+        )
+        for pack in list_prompt_packs()
+    ]

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.core.litellm_client import LiteLLMClient
+from app.core.prompt_packs import get_prompt
 from app.models.benchmark import BenchmarkResult
 from app.models.model import Model
 
@@ -191,7 +192,7 @@ async def benchmark_single_model(
             litellm_model = _get_litellm_model_name(model)
             stream = client.complete_stream(
                 model=litellm_model,
-                messages=[{"role": "user", "content": prompt_pack}],
+                messages=[{"role": "user", "content": get_prompt(prompt_pack)}],
                 max_tokens=max_tokens,
                 api_key=api_key,
                 api_base=api_base,

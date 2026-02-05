@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from app.core.litellm_client import LiteLLMClient
 from app.core.metrics import MetricsCollector, extract_chunk_content
+from app.core.prompt_packs import get_prompt
 from app.core.providers import get_litellm_model_name
 from app.models.monitoring import UptimeCheck
 
@@ -20,20 +21,8 @@ def _get_litellm_model_name(model: "Model") -> str:
     return get_litellm_model_name(provider_type, model.model_id)
 
 
-HEALTH_CHECK_PROMPT = "Count from 1 to 20, each number on a new line."
-
-
-async def check_uptime(model: "Model") -> UptimeCheck:
-    """
-    Health check with TTFT and TPS metrics via streaming.
-    Uses a consistent prompt that elicits ~25-30 tokens for meaningful metrics.
-
-    Args:
-        model: Model instance to check (must have provider_account loaded)
-
-    Returns:
-        UptimeCheck with status, latency_ms, ttft_ms, tps, output_tokens
-    """
+async def check_uptime(model: "Model", prompt_pack: str = "health_check") -> UptimeCheck:
+    """Run health check with TTFT and TPS metrics via streaming."""
     provider_account = getattr(model, "provider_account", None)
     provider_type = getattr(provider_account, "provider_type", None)
     credentials = provider_account.credentials if provider_account else {}
@@ -62,7 +51,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
         )
         async for chunk in client.complete_stream(
             model=litellm_model,
-            messages=[{"role": "user", "content": HEALTH_CHECK_PROMPT}],
+            messages=[{"role": "user", "content": get_prompt(prompt_pack)}],
             max_tokens=100,
             temperature=1,
             timeout=15,

@@ -73,3 +73,12 @@ class UptimeHistoryResponse(BaseModel):
     total: int = Field(..., description="Total number of checks")
     limit: int = Field(..., description="Limit used in query")
     offset: int = Field(..., description="Offset used in query")
+
+
+class PromptPackResponse(BaseModel):
+    """Schema for a single prompt pack."""
+
+    id: str = Field(..., description="Prompt pack identifier")
+    name: str = Field(..., description="Human-readable name")
+    prompt: str = Field(..., description="The prompt text")
+    expected_tokens: int = Field(..., description="Expected output token count")
