@@ -32,7 +32,7 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [timeRange, setTimeRange] = useState<'5m' | '1h' | '24h' | '7d' | '30d'>('1h');
 
   const fetchData = async () => {
     try {
@@ -239,7 +239,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Trends</h2>
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-              {(['24h', '7d', '30d'] as const).map((range) => (
+              {(['5m', '1h', '24h', '7d', '30d'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}

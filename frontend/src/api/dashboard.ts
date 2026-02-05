@@ -42,6 +42,12 @@ export async function getUptimeHistory(days: number = 1): Promise<UptimeCheck[]>
   return response.items;
 }
 
+export async function getUptimeHistoryByMinutes(minutes: number): Promise<UptimeCheck[]> {
+  const limit = Math.min(minutes * 10, 5000);
+  const response = await apiGet<UptimeListResponse>(`/monitoring/uptime?limit=${limit}`);
+  return response.items;
+}
+
 export async function getLatestBenchmarks(limit: number = 5): Promise<BenchmarkRun[]> {
   const response = await apiGet<BenchmarkListResponse>(`/benchmarks?limit=${limit}`);
   return response.runs;
@@ -182,13 +188,13 @@ export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert
     .slice(0, 10);
 }
 
-export async function getDashboardData(timeRange: '24h' | '7d' | '30d' = '24h'): Promise<DashboardData> {
-  const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
+export async function getDashboardData(timeRange: '5m' | '1h' | '24h' | '7d' | '30d' = '1h'): Promise<DashboardData> {
+  const minutes = timeRange === '5m' ? 5 : timeRange === '1h' ? 60 : timeRange === '24h' ? 1440 : timeRange === '7d' ? 10080 : 43200;
   
   const [rawUptimeChecks, benchmarks, uptimeHistory, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
     getLatestBenchmarks(10),
-    getUptimeHistory(days),
+    getUptimeHistoryByMinutes(minutes),
     getAlerts(true),
     getModelCount()
   ]);
