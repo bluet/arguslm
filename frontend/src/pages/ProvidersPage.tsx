@@ -19,7 +19,8 @@ import {
   deleteProvider, 
   testProvider, 
   testProviderConnection,
-  refreshModels 
+  refreshModels,
+  getProviderCatalog
 } from '../api/providers';
 import { modelsApi } from '../api/models';
 import { CreateModelData } from '../types/model';
@@ -31,89 +32,6 @@ import { Modal } from '../components/ui/Modal';
 import { Toggle } from '../components/ui/Toggle';
 import { Card } from '../components/ui/Card';
 
-const PROVIDER_TYPES: { value: ProviderType; label: string }[] = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'google_vertex', label: 'Google Vertex AI' },
-  { value: 'google_ai_studio', label: 'Google AI Studio' },
-  { value: 'aws_bedrock', label: 'AWS Bedrock' },
-  { value: 'azure_openai', label: 'Azure OpenAI' },
-  { value: 'ollama', label: 'Ollama' },
-  { value: 'lm_studio', label: 'LM Studio' },
-  { value: 'openrouter', label: 'OpenRouter' },
-  { value: 'together_ai', label: 'Together AI' },
-  { value: 'groq', label: 'Groq' },
-  { value: 'mistral', label: 'Mistral AI' },
-  { value: 'xai', label: 'xAI (Grok)' },
-  { value: 'fireworks_ai', label: 'Fireworks AI' },
-  { value: 'deepseek', label: 'DeepSeek' },
-  { value: 'custom_openai_compatible', label: 'Custom OpenAI Compatible' },
-];
-
-type ProviderFieldConfig = {
-  requiresApiKey: boolean;
-  requiresBaseUrl: boolean;
-  showOrgFields: boolean;
-  showRegionField?: boolean;
-  apiKeyLabel?: string;
-  baseUrlLabel?: string;
-  defaultBaseUrl?: string;
-};
-
-const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
-  openai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: true, defaultBaseUrl: 'https://api.openai.com/v1' },
-  anthropic: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.anthropic.com' },
-  google_vertex: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false },
-  google_ai_studio: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
-  aws_bedrock: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, showRegionField: true, apiKeyLabel: 'Bearer Token (from AWS Bedrock Console)' },
-  azure_openai: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
-  ollama: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:11434' },
-  lm_studio: { requiresApiKey: false, requiresBaseUrl: true, showOrgFields: false, baseUrlLabel: 'Base URL', defaultBaseUrl: 'http://host.docker.internal:1234/v1' },
-  openrouter: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://openrouter.ai/api/v1' },
-  together_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.together.xyz/v1' },
-  groq: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.groq.com/openai/v1' },
-  mistral: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.mistral.ai/v1' },
-  xai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.x.ai/v1' },
-  fireworks_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.fireworks.ai/inference/v1' },
-  deepseek: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.deepseek.com' },
-  custom_openai_compatible: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
-};
-
-const AWS_BEDROCK_REGIONS = [
-  { value: 'us-east-1', label: 'US East (N. Virginia)' },
-  { value: 'us-east-2', label: 'US East (Ohio)' },
-  { value: 'us-west-1', label: 'US West (N. California)' },
-  { value: 'us-west-2', label: 'US West (Oregon)' },
-  { value: 'ca-central-1', label: 'Canada (Central)' },
-  { value: 'ca-west-1', label: 'Canada West (Calgary)' },
-  { value: 'sa-east-1', label: 'South America (Sao Paulo)' },
-  { value: 'eu-west-1', label: 'Europe (Ireland)' },
-  { value: 'eu-west-2', label: 'Europe (London)' },
-  { value: 'eu-west-3', label: 'Europe (Paris)' },
-  { value: 'eu-central-1', label: 'Europe (Frankfurt)' },
-  { value: 'eu-central-2', label: 'Europe (Zurich)' },
-  { value: 'eu-north-1', label: 'Europe (Stockholm)' },
-  { value: 'eu-south-1', label: 'Europe (Milan)' },
-  { value: 'eu-south-2', label: 'Europe (Spain)' },
-  { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
-  { value: 'ap-northeast-2', label: 'Asia Pacific (Seoul)' },
-  { value: 'ap-northeast-3', label: 'Asia Pacific (Osaka)' },
-  { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
-  { value: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
-  { value: 'ap-southeast-3', label: 'Asia Pacific (Jakarta)' },
-  { value: 'ap-southeast-4', label: 'Asia Pacific (Melbourne)' },
-  { value: 'ap-southeast-5', label: 'Asia Pacific (Malaysia)' },
-  { value: 'ap-southeast-7', label: 'Asia Pacific (Thailand)' },
-  { value: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
-  { value: 'ap-south-2', label: 'Asia Pacific (Hyderabad)' },
-  { value: 'ap-east-2', label: 'Asia Pacific (Taipei)' },
-  { value: 'af-south-1', label: 'Africa (Cape Town)' },
-  { value: 'me-south-1', label: 'Middle East (Bahrain)' },
-  { value: 'me-central-1', label: 'Middle East (UAE)' },
-  { value: 'il-central-1', label: 'Israel (Tel Aviv)' },
-  { value: 'mx-central-1', label: 'Mexico (Central)' },
-];
-
 export const ProvidersPage = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -123,6 +41,18 @@ export const ProvidersPage = () => {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [addModelProviderId, setAddModelProviderId] = useState<string | null>(null);
   const [newModelId, setNewModelId] = useState('');
+
+  const { data: catalog, isLoading: isCatalogLoading } = useQuery({
+    queryKey: ['providerCatalog'],
+    queryFn: getProviderCatalog,
+  });
+
+  const providerTypes = catalog ? Object.values(catalog.providers)
+    .sort((a, b) => {
+      if (a.tested === b.tested) return a.label.localeCompare(b.label);
+      return a.tested ? -1 : 1;
+    })
+    .map(p => ({ value: p.id, label: p.label })) : [];
 
   useEffect(() => {
     if (notification) {
@@ -138,17 +68,28 @@ export const ProvidersPage = () => {
     name: '',
     provider_type: 'openai',
     api_key: '',
-    base_url: PROVIDER_FIELD_CONFIG.openai.defaultBaseUrl || '',
+    base_url: '',
     organization_id: '',
     project_id: '',
     region: '',
     is_enabled: true,
   });
 
-  const { data: providers, isLoading, error } = useQuery({
+  useEffect(() => {
+    if (catalog && newProvider.provider_type) {
+      const providerSpec = catalog.providers[newProvider.provider_type];
+      if (providerSpec && !newProvider.base_url && providerSpec.default_base_url) {
+        setNewProvider(prev => ({ ...prev, base_url: providerSpec.default_base_url || '' }));
+      }
+    }
+  }, [catalog, newProvider.provider_type]);
+
+  const { data: providers, isLoading: isProvidersLoading, error } = useQuery({
     queryKey: ['providers'],
     queryFn: listProviders,
   });
+
+  const isLoading = isCatalogLoading || isProvidersLoading;
 
   const createMutation = useMutation({
     mutationFn: createProvider,
@@ -156,11 +97,14 @@ export const ProvidersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
       setIsAddModalOpen(false);
       setConnectionTestResult(null);
+      
+      const defaultBaseUrl = catalog?.providers['openai']?.default_base_url || '';
+      
       setNewProvider({
         name: '',
         provider_type: 'openai',
         api_key: '',
-        base_url: PROVIDER_FIELD_CONFIG.openai.defaultBaseUrl || '',
+        base_url: defaultBaseUrl,
         organization_id: '',
         project_id: '',
         region: '',
@@ -379,11 +323,11 @@ export const ProvidersPage = () => {
                         placeholder="https://api.example.com/v1"
                         onBlur={(e) => updateMutation.mutate({ id: provider.id, data: { base_url: e.target.value } })}
                       />
-                      {provider.provider_type === 'aws_bedrock' && (
+                      {catalog?.providers[provider.provider_type]?.requires_region && (
                         <Select
-                          label="AWS Region"
-                          options={AWS_BEDROCK_REGIONS}
-                          value={provider.region || 'us-east-1'}
+                          label="Region"
+                          options={catalog.providers[provider.provider_type].region_options.map(([value, label]) => ({ value, label }))}
+                          value={provider.region || catalog.providers[provider.provider_type].region_options[0]?.[0] || ''}
                           onChange={(e) => updateMutation.mutate({ id: provider.id, data: { region: e.target.value } })}
                         />
                       )}
@@ -496,48 +440,48 @@ export const ProvidersPage = () => {
           
           <Select
             label="Provider Type"
-            options={PROVIDER_TYPES}
+            options={providerTypes}
             value={newProvider.provider_type}
             onChange={(e) => {
               const providerType = e.target.value as ProviderType;
-              const config = PROVIDER_FIELD_CONFIG[providerType];
+              const config = catalog?.providers[providerType];
               setNewProvider({ 
                 ...newProvider, 
                 provider_type: providerType,
-                base_url: config.defaultBaseUrl || ''
+                base_url: config?.default_base_url || ''
               });
             }}
           />
 
-          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresApiKey && (
+          {catalog?.providers[newProvider.provider_type]?.requires_api_key && (
             <Input
-              label={PROVIDER_FIELD_CONFIG[newProvider.provider_type].apiKeyLabel || "API Key"}
+              label={catalog.providers[newProvider.provider_type].api_key_label || "API Key"}
               type="password"
               placeholder="sk-..."
               value={newProvider.api_key}
               onChange={(e) => setNewProvider({ ...newProvider, api_key: e.target.value })}
-              required={PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresApiKey}
+              required={catalog.providers[newProvider.provider_type].requires_api_key}
             />
           )}
 
           <Input
-            label={PROVIDER_FIELD_CONFIG[newProvider.provider_type].baseUrlLabel || (PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresBaseUrl ? "Base URL" : "Base URL (Optional)")}
+            label={catalog?.providers[newProvider.provider_type]?.base_url_label || (catalog?.providers[newProvider.provider_type]?.requires_base_url ? "Base URL" : "Base URL (Optional)")}
             placeholder="https://api.example.com/v1"
             value={newProvider.base_url}
             onChange={(e) => setNewProvider({ ...newProvider, base_url: e.target.value })}
-            required={PROVIDER_FIELD_CONFIG[newProvider.provider_type].requiresBaseUrl}
+            required={catalog?.providers[newProvider.provider_type]?.requires_base_url}
           />
 
-          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showRegionField && (
+          {catalog?.providers[newProvider.provider_type]?.requires_region && (
             <Select
-              label="AWS Region"
-              options={AWS_BEDROCK_REGIONS}
-              value={newProvider.region || 'us-east-1'}
+              label="Region"
+              options={catalog.providers[newProvider.provider_type].region_options.map(([value, label]) => ({ value, label }))}
+              value={newProvider.region || catalog.providers[newProvider.provider_type].region_options[0]?.[0] || ''}
               onChange={(e) => setNewProvider({ ...newProvider, region: e.target.value })}
             />
           )}
 
-          {PROVIDER_FIELD_CONFIG[newProvider.provider_type].showOrgFields && (
+          {catalog?.providers[newProvider.provider_type]?.show_org_fields && (
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Organization ID (Optional)"

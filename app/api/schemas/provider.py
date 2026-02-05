@@ -89,3 +89,27 @@ class ProviderRefreshResponse(BaseModel):
     success: bool = Field(..., description="Whether refresh succeeded")
     models_discovered: int = Field(..., description="Number of models discovered")
     message: str = Field(..., description="Refresh result message")
+
+
+class ProviderSpecResponse(BaseModel):
+    """Schema for a single provider specification."""
+
+    id: str
+    label: str
+    tested: bool
+    requires_api_key: bool
+    requires_base_url: bool
+    requires_region: bool
+    show_org_fields: bool
+    default_base_url: str | None = None
+    api_key_label: str | None = None
+    base_url_label: str | None = None
+    region_options: list[tuple[str, str]] = Field(default_factory=list)
+
+
+class ProviderCatalogResponse(BaseModel):
+    """Schema for provider catalog response."""
+
+    providers: dict[str, ProviderSpecResponse]
+    total: int
+    tested_count: int

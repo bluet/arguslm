@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from app.core.litellm_client import LiteLLMClient
 from app.core.metrics import MetricsCollector, extract_chunk_content
+from app.core.providers import get_litellm_model_name
 from app.models.monitoring import UptimeCheck
 
 if TYPE_CHECKING:
@@ -13,39 +14,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
-    "openai": "",
-    "anthropic": "anthropic/",
-    "azure": "azure/",
-    "azure_openai": "azure/",
-    "bedrock": "bedrock/",
-    "aws_bedrock": "bedrock/",
-    "vertex_ai": "vertex_ai/",
-    "google_vertex": "vertex_ai/",
-    "google_ai_studio": "gemini/",
-    "cohere": "cohere/",
-    "together_ai": "together_ai/",
-    "groq": "groq/",
-    "mistral": "mistral/",
-    "deepseek": "deepseek/",
-    "ollama": "ollama/",
-    "lm_studio": "lm_studio/",
-    "custom_openai_compatible": "openai/",
-    "openrouter": "openrouter/",
-    "xai": "xai/",
-    "fireworks_ai": "fireworks_ai/",
-}
-
-
 def _get_litellm_model_name(model: "Model") -> str:
-    """Build LiteLLM model name with correct provider prefix for LiteLLM routing."""
     provider_account = getattr(model, "provider_account", None)
     provider_type = getattr(provider_account, "provider_type", None) or "openai"
-    prefix = LITELLM_PROVIDER_PREFIXES.get(provider_type, "")
-    model_id = model.model_id
-    if prefix and not model_id.startswith(prefix):
-        return f"{prefix}{model_id}"
-    return model_id
+    return get_litellm_model_name(provider_type, model.model_id)
 
 
 HEALTH_CHECK_PROMPT = "Count from 1 to 20, each number on a new line."

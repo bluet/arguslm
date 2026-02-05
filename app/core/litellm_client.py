@@ -11,9 +11,8 @@ Provides a unified interface for calling LLM APIs through LiteLLM with:
 
 import asyncio
 import logging
-from enum import Enum
-from typing import AsyncIterator, Dict, List, Optional, Any
 from dataclasses import dataclass
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 import litellm
 from litellm import acompletion
@@ -27,25 +26,6 @@ from litellm.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-class ProviderType(str, Enum):
-    """Supported LLM providers."""
-
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    AZURE = "azure"
-    BEDROCK = "bedrock"
-    VERTEX = "vertex_ai"
-    COHERE = "cohere"
-    HUGGINGFACE = "huggingface"
-    REPLICATE = "replicate"
-    TOGETHER = "together_ai"
-    ANYSCALE = "anyscale"
-    PERPLEXITY = "perplexity"
-    GROQ = "groq"
-    MISTRAL = "mistral"
-    DEEPSEEK = "deepseek"
 
 
 @dataclass
@@ -64,46 +44,6 @@ class CompletionConfig:
     api_key: Optional[str] = None
     api_base: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
-
-
-class ProviderConfig:
-    """Maps provider types to LiteLLM model name formats."""
-
-    # Provider-specific model name prefixes for LiteLLM
-    PROVIDER_PREFIXES = {
-        ProviderType.OPENAI: "",  # OpenAI models don't need prefix
-        ProviderType.ANTHROPIC: "anthropic/",
-        ProviderType.AZURE: "azure/",
-        ProviderType.BEDROCK: "bedrock/",
-        ProviderType.VERTEX: "vertex_ai/",
-        ProviderType.COHERE: "cohere/",
-        ProviderType.HUGGINGFACE: "huggingface/",
-        ProviderType.REPLICATE: "replicate/",
-        ProviderType.TOGETHER: "together_ai/",
-        ProviderType.ANYSCALE: "anyscale/",
-        ProviderType.PERPLEXITY: "perplexity/",
-        ProviderType.GROQ: "groq/",
-        ProviderType.MISTRAL: "mistral/",
-        ProviderType.DEEPSEEK: "deepseek/",
-    }
-
-    @classmethod
-    def get_model_name(cls, provider: ProviderType, model: str) -> str:
-        """
-        Convert provider and model to LiteLLM format.
-
-        Args:
-            provider: Provider type enum
-            model: Base model name (e.g., "gpt-4", "claude-3-opus")
-
-        Returns:
-            LiteLLM-formatted model name (e.g., "anthropic/claude-3-opus")
-        """
-        prefix = cls.PROVIDER_PREFIXES.get(provider, "")
-        # Avoid double-prefixing if model already has prefix
-        if model.startswith(prefix):
-            return model
-        return f"{prefix}{model}"
 
 
 class LiteLLMClient:

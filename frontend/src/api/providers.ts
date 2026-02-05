@@ -1,5 +1,15 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from './client';
-import { Provider, ProviderCreate, ProviderUpdate, ProviderTestResult } from '../types/provider';
+import { Provider, ProviderCreate, ProviderUpdate, ProviderTestResult, ProviderSpec } from '../types/provider';
+
+export interface ProviderCatalogResponse {
+  providers: Record<string, ProviderSpec>;
+  total: number;
+  tested_count: number;
+}
+
+export async function getProviderCatalog(): Promise<ProviderCatalogResponse> {
+  return apiGet<ProviderCatalogResponse>('/providers/catalog');
+}
 
 interface ProviderListResponse {
   providers: BackendProviderResponse[];

@@ -36,19 +36,13 @@ def _get_provider_key(model: Model) -> str:
     return provider_type or "unknown"
 
 
-# Import shared prefix mapping to avoid drift between uptime.py and benchmark_engine.py
-from app.core.uptime import LITELLM_PROVIDER_PREFIXES
+from app.core.providers import get_litellm_model_name as _catalog_get_model_name
 
 
 def _get_litellm_model_name(model: Model) -> str:
-    """Get the LiteLLM-formatted model name with provider prefix."""
     provider_account = getattr(model, "provider_account", None)
     provider_type = getattr(provider_account, "provider_type", None) or "openai"
-    prefix = LITELLM_PROVIDER_PREFIXES.get(provider_type, "")
-    model_id = model.model_id
-    if prefix and not model_id.startswith(prefix):
-        return f"{prefix}{model_id}"
-    return model_id
+    return _catalog_get_model_name(provider_type, model.model_id)
 
 
 def _init_semaphores(throttle: ThrottleConfig) -> dict[str, Any]:

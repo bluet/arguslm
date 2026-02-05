@@ -11,10 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.schemas.provider import (
+    ProviderCatalogResponse,
     ProviderCreate,
     ProviderListResponse,
     ProviderRefreshResponse,
     ProviderResponse,
+    ProviderSpecResponse,
     ProviderTestResponse,
     ProviderUpdate,
 )
@@ -89,6 +91,33 @@ async def list_providers(
     return ProviderListResponse(
         providers=[ProviderResponse.model_validate(p) for p in providers],
         total=len(providers),
+    )
+
+
+@router.get("/catalog", response_model=ProviderCatalogResponse)
+async def get_provider_catalog() -> ProviderCatalogResponse:
+    """Get provider catalog with configuration specs for all supported providers."""
+    providers = {
+        provider_id: ProviderSpecResponse(
+            id=spec.id,
+            label=spec.label,
+            tested=spec.tested,
+            requires_api_key=spec.requires_api_key,
+            requires_base_url=spec.requires_base_url,
+            requires_region=spec.requires_region,
+            show_org_fields=spec.show_org_fields,
+            default_base_url=spec.default_base_url,
+            api_key_label=spec.api_key_label,
+            base_url_label=spec.base_url_label,
+            region_options=list(spec.region_options),
+        )
+        for provider_id, spec in PROVIDER_CATALOG.items()
+    }
+
+    return ProviderCatalogResponse(
+        providers=providers,
+        total=len(providers),
+        tested_count=len(TESTED_PROVIDERS),
     )
 
 
@@ -208,22 +237,12 @@ async def delete_provider(
     logger.info("Deleted provider account: %s", provider.display_name)
 
 
-# LiteLLM provider prefixes for model names
-LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
-    "openai": "",
-    "anthropic": "anthropic/",
-    "azure_openai": "azure/",
-    "aws_bedrock": "bedrock/",
-    "google_vertex": "vertex_ai/",
-    "google_ai_studio": "gemini/",
-    "together_ai": "together_ai/",
-    "groq": "groq/",
-    "mistral": "mistral/",
-    "ollama": "ollama/",
-    "lm_studio": "openai/",
-    "openrouter": "openrouter/",
-    "custom_openai_compatible": "openai/",
-}
+from app.core.providers import (
+    PROVIDER_CATALOG,
+    TESTED_PROVIDERS,
+    get_litellm_model_name,
+    get_provider_spec,
+)
 
 
 async def _test_local_provider_ping(base_url: str, provider_type: str) -> ProviderTestResponse:
