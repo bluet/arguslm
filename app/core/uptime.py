@@ -22,7 +22,7 @@ LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
     "aws_bedrock": "bedrock/",
     "vertex_ai": "vertex_ai/",
     "google_vertex": "vertex_ai/",
-    "google_gemini": "gemini/",
+    "google_ai_studio": "gemini/",
     "cohere": "cohere/",
     "together_ai": "together_ai/",
     "groq": "groq/",

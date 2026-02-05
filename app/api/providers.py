@@ -21,7 +21,10 @@ from app.api.schemas.provider import (
 from app.core.litellm_client import LiteLLMClient
 from app.db.init import get_db
 from app.discovery import get_source_for_provider
+from app.discovery.anthropic import AnthropicModelSource
 from app.discovery.azure import AzureOpenAIModelSource
+from app.discovery.bedrock import BedrockModelSource
+from app.discovery.google_ai_studio import GoogleAIStudioModelSource
 from app.discovery.ollama import OllamaModelSource
 from app.discovery.openai import OpenAIModelSource
 from app.models.model import Model
@@ -212,7 +215,7 @@ LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
     "azure_openai": "azure/",
     "aws_bedrock": "bedrock/",
     "google_vertex": "vertex_ai/",
-    "google_gemini": "gemini/",
+    "google_ai_studio": "gemini/",
     "together_ai": "together_ai/",
     "groq": "groq/",
     "mistral": "mistral/",
@@ -285,7 +288,7 @@ async def test_new_provider_connection(
     test_models = {
         "openai": "gpt-3.5-turbo",
         "anthropic": "anthropic/claude-3-haiku-20240307",
-        "google_gemini": "gemini/gemini-1.5-flash",
+        "google_ai_studio": "gemini/gemini-1.5-flash",
         "groq": "groq/llama3-8b-8192",
         "mistral": "mistral/mistral-small-latest",
         "together_ai": "together_ai/meta-llama/Llama-3-8b-chat-hf",
@@ -372,7 +375,7 @@ async def test_provider_connection(
     test_models = {
         "openai": "gpt-3.5-turbo",
         "anthropic": "anthropic/claude-3-haiku-20240307",
-        "google_gemini": "gemini/gemini-1.5-flash",
+        "google_ai_studio": "gemini/gemini-1.5-flash",
         "groq": "groq/llama3-8b-8192",
         "mistral": "mistral/mistral-small-latest",
         "together_ai": "together_ai/meta-llama/Llama-3-8b-chat-hf",
@@ -449,6 +452,12 @@ async def refresh_provider_models(
         model_source = OllamaModelSource()
     elif provider.provider_type == "azure_openai":
         model_source = AzureOpenAIModelSource()
+    elif provider.provider_type == "anthropic":
+        model_source = AnthropicModelSource()
+    elif provider.provider_type == "google_ai_studio":
+        model_source = GoogleAIStudioModelSource()
+    elif provider.provider_type == "aws_bedrock":
+        model_source = BedrockModelSource()
     elif provider.provider_type in [
         "openai",
         "openrouter",

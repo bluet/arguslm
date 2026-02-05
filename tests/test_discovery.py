@@ -10,8 +10,6 @@ from app.discovery.base import ModelDescriptor
 from app.discovery.ollama import OllamaModelSource
 from app.discovery.openai import OpenAIModelSource
 from app.discovery.static import (
-    ANTHROPIC_MODELS,
-    GOOGLE_GEMINI_MODELS,
     MISTRAL_MODELS,
     StaticModelSource,
     get_source_for_provider,
@@ -302,21 +300,8 @@ class TestStaticModelSource:
     """Tests for static/curated model source."""
 
     @pytest.mark.asyncio
-    async def test_list_anthropic_models(self, mock_anthropic_account):
-        """Test Anthropic curated model list."""
-        source = StaticModelSource("anthropic")
-        models = await source.list_models(mock_anthropic_account)
-
-        assert len(models) == len(ANTHROPIC_MODELS)
-        model_ids = [m.id for m in models]
-        assert "claude-opus-4-5-20251101" in model_ids
-        assert "claude-sonnet-4-5-20250929" in model_ids
-        assert all(m.provider_type == "anthropic" for m in models)
-        assert all(m.owned_by == "anthropic" for m in models)
-
-    @pytest.mark.asyncio
     async def test_list_mistral_models(self, mock_mistral_account):
-        """Test Mistral curated model list."""
+        """Test Mistral curated model list (static registry)."""
         source = StaticModelSource("mistral")
         models = await source.list_models(mock_mistral_account)
 
@@ -326,20 +311,23 @@ class TestStaticModelSource:
         assert "codestral-latest" in model_ids
 
     @pytest.mark.asyncio
-    async def test_list_google_gemini_models(self):
-        """Test Google Gemini curated model list."""
+    async def test_anthropic_removed_from_static_registry(self, mock_anthropic_account):
+        """Test Anthropic now uses dynamic discovery, not static registry."""
+        source = StaticModelSource("anthropic")
+        models = await source.list_models(mock_anthropic_account)
+        assert models == []
+
+    @pytest.mark.asyncio
+    async def test_google_ai_studio_removed_from_static_registry(self):
+        """Test Google AI Studio now uses dynamic discovery, not static registry."""
         account = MagicMock()
-        account.provider_type = "google_gemini"
-        account.display_name = "Gemini API"
+        account.provider_type = "google_ai_studio"
+        account.display_name = "Google AI Studio"
         account.credentials = {}
 
-        source = StaticModelSource("google_gemini")
+        source = StaticModelSource("google_ai_studio")
         models = await source.list_models(account)
-
-        assert len(models) == len(GOOGLE_GEMINI_MODELS)
-        model_ids = [m.id for m in models]
-        assert "gemini-2.0-flash-exp" in model_ids
-        assert "gemini-1.5-pro" in model_ids
+        assert models == []
 
     @pytest.mark.asyncio
     async def test_list_unknown_provider(self, caplog):

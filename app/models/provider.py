@@ -12,7 +12,7 @@ ProviderType = Literal[
     "openai",
     "anthropic",
     "google_vertex",
-    "google_gemini",
+    "google_ai_studio",
     "aws_bedrock",
     "azure_openai",
     "ollama",

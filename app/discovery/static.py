@@ -55,7 +55,7 @@ MISTRAL_MODELS: list[dict] = [
     {"id": "codestral-latest", "owned_by": "mistral"},
 ]
 
-GOOGLE_GEMINI_MODELS: list[dict] = [
+GOOGLE_AI_STUDIO_MODELS: list[dict] = [
     {"id": "gemini-2.0-flash-exp", "owned_by": "google"},
     {"id": "gemini-1.5-pro", "owned_by": "google"},
     {"id": "gemini-1.5-flash", "owned_by": "google"},
@@ -126,13 +126,10 @@ AWS_BEDROCK_MODELS: list[dict] = [
     {"id": "ai21.jamba-1-5-mini-v1:0", "owned_by": "ai21"},
 ]
 
-# Registry mapping provider types to curated model lists
+# Providers without dynamic discovery APIs (others use dedicated ModelSource classes)
 STATIC_REGISTRIES: dict[str, list[dict]] = {
-    "anthropic": ANTHROPIC_MODELS,
     "mistral": MISTRAL_MODELS,
-    "google_gemini": GOOGLE_GEMINI_MODELS,
     "google_vertex": GOOGLE_VERTEX_MODELS,
-    "aws_bedrock": AWS_BEDROCK_MODELS,
 }
 
 

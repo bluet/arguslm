@@ -2,7 +2,7 @@ export type ProviderType =
   | 'openai'
   | 'anthropic'
   | 'google_vertex'
-  | 'google_gemini'
+  | 'google_ai_studio'
   | 'aws_bedrock'
   | 'azure_openai'
   | 'ollama'
