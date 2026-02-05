@@ -340,7 +340,7 @@ const DashboardPage: React.FC = () => {
 
             {/* TPS History Chart */}
             <div className="h-[400px]">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TPS History (tokens/sec)</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TPS History (tokens/sec, excluding TTFT)</h3>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.tpsHistory}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />

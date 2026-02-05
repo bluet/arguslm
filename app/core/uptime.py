@@ -81,7 +81,7 @@ async def check_uptime(model: "Model") -> UptimeCheck:
             status="up",
             latency_ms=metrics["total_latency_ms"],
             ttft_ms=metrics["ttft_ms"],
-            tps=metrics["tps"],
+            tps=metrics["tps_excluding_ttft"],
             output_tokens=metrics["output_tokens"],
         )
     except Exception as e:
