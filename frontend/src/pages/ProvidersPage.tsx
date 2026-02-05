@@ -44,6 +44,9 @@ const PROVIDER_TYPES: { value: ProviderType; label: string }[] = [
   { value: 'together_ai', label: 'Together AI' },
   { value: 'groq', label: 'Groq' },
   { value: 'mistral', label: 'Mistral AI' },
+  { value: 'xai', label: 'xAI (Grok)' },
+  { value: 'fireworks_ai', label: 'Fireworks AI' },
+  { value: 'deepseek', label: 'DeepSeek' },
   { value: 'custom_openai_compatible', label: 'Custom OpenAI Compatible' },
 ];
 
@@ -70,6 +73,9 @@ const PROVIDER_FIELD_CONFIG: Record<ProviderType, ProviderFieldConfig> = {
   together_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.together.xyz/v1' },
   groq: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.groq.com/openai/v1' },
   mistral: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.mistral.ai/v1' },
+  xai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.x.ai/v1' },
+  fireworks_ai: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.fireworks.ai/inference/v1' },
+  deepseek: { requiresApiKey: true, requiresBaseUrl: false, showOrgFields: false, defaultBaseUrl: 'https://api.deepseek.com' },
   custom_openai_compatible: { requiresApiKey: true, requiresBaseUrl: true, showOrgFields: false },
 };
 

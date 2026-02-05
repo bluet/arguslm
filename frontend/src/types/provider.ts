@@ -11,6 +11,9 @@ export type ProviderType =
   | 'together_ai'
   | 'groq'
   | 'mistral'
+  | 'xai'
+  | 'fireworks_ai'
+  | 'deepseek'
   | 'custom_openai_compatible';
 
 export interface Provider {
