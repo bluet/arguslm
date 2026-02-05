@@ -36,22 +36,8 @@ def _get_provider_key(model: Model) -> str:
     return provider_type or "unknown"
 
 
-# LiteLLM requires model name prefixes for non-OpenAI providers
-LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
-    "openai": "",
-    "anthropic": "anthropic/",
-    "azure": "azure/",
-    "bedrock": "bedrock/",
-    "vertex_ai": "vertex_ai/",
-    "cohere": "cohere/",
-    "together_ai": "together_ai/",
-    "groq": "groq/",
-    "mistral": "mistral/",
-    "deepseek": "deepseek/",
-    "ollama": "ollama/",
-    "lm_studio": "openai/",
-    "custom_openai_compatible": "openai/",
-}
+# Import shared prefix mapping to avoid drift between uptime.py and benchmark_engine.py
+from app.core.uptime import LITELLM_PROVIDER_PREFIXES
 
 
 def _get_litellm_model_name(model: Model) -> str:
