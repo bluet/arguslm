@@ -21,6 +21,9 @@ ProviderType = Literal[
     "together_ai",
     "groq",
     "mistral",
+    "xai",
+    "fireworks_ai",
+    "deepseek",
     "custom_openai_compatible",
 ]
 

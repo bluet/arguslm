@@ -29,12 +29,16 @@ LITELLM_PROVIDER_PREFIXES: dict[str, str] = {
     "mistral": "mistral/",
     "deepseek": "deepseek/",
     "ollama": "ollama/",
-    "lm_studio": "openai/",
+    "lm_studio": "lm_studio/",
     "custom_openai_compatible": "openai/",
+    "openrouter": "openrouter/",
+    "xai": "xai/",
+    "fireworks_ai": "fireworks_ai/",
 }
 
 
 def _get_litellm_model_name(model: "Model") -> str:
+    """Build LiteLLM model name with correct provider prefix for LiteLLM routing."""
     provider_account = getattr(model, "provider_account", None)
     provider_type = getattr(provider_account, "provider_type", None) or "openai"
     prefix = LITELLM_PROVIDER_PREFIXES.get(provider_type, "")
