@@ -2,129 +2,144 @@
 
 **The hundred-eyed watcher for your LLM providers.**
 
-ArgusLM is a comprehensive, self-hosted tool designed to benchmark and monitor the performance of Large Language Models (LLMs) across 100+ providers. Built on top of [LiteLLM](https://github.com/BerriAI/litellm), it provides a unified interface to track uptime, Time to First Token (TTFT), and Tokens Per Second (TPS) for both local and remote LLM endpoints.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
+
+ArgusLM monitors and benchmarks LLM performance across 100+ providers. Track uptime, TTFT, and TPS for OpenAI, Anthropic, AWS Bedrock, Google Vertex, Azure, Ollama, LM Studio, and more—all through a single dashboard.
 
 > *In Greek mythology, Argus Panoptes was a giant with a hundred eyes. ArgusLM watches over your hundred providers.*
 
-## 🚀 Features
+---
 
-- **Multi-Provider Support**: Seamlessly integrate with OpenAI, Anthropic, AWS Bedrock, Google Vertex, Azure OpenAI, Ollama, LM Studio, and more via LiteLLM.
-- **Parallel Benchmarking**: Run performance tests across multiple models simultaneously to compare latency and throughput.
-- **Performance Metrics**: Track Time to First Token (TTFT) and Tokens Per Second (TPS) for meaningful cross-model comparison—metrics that matter regardless of output length.
-- **Uptime Monitoring**: Configure automated health checks at custom intervals to ensure your LLM services are always available.
-- **Real-time Dashboard**: Visualize current status, latency trends, TTFT, and TPS history with interactive charts.
-- **Intelligent Alerting**: Receive in-app notifications for model downtime, performance degradation, or global unavailability.
-- **Model Discovery**: Automatically detect available models from supported providers or manually configure custom endpoints.
-- **Custom Model Naming**: Organize your models with human-readable names for better tracking.
-- **Export Results**: Download benchmark data and monitoring history in JSON or CSV formats for further analysis.
+## Quick Start
 
-## 🛠 Technology Stack
+```bash
+git clone https://github.com/bluet/arguslm.git && cd arguslm
+cp .env.example .env
 
-- **Backend**: FastAPI (Python 3.11+)
-- **Frontend**: React + TypeScript + Vite
-- **Database**: SQLite (Local) / PostgreSQL (Production)
-- **Styling**: Tailwind CSS
-- **Charts**: Recharts
-- **Provider Abstraction**: LiteLLM
+# Generate secrets
+docker run --rm python:3.11-slim sh -c "pip install -q cryptography && python -c '
+from cryptography.fernet import Fernet; import secrets
+print(f\"ENCRYPTION_KEY={Fernet.generate_key().decode()}\")
+print(f\"SECRET_KEY={secrets.token_urlsafe(32)}\")
+print(f\"DB_PASSWORD={secrets.token_urlsafe(24)}\")
+'" >> .env
 
-## 🚦 Quick Start
+docker compose up -d
+```
 
-### Method 1: Docker Compose (Recommended)
-
-The easiest way to get started is using Docker Compose, which sets up the backend, frontend, and database automatically.
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/bluet/arguslm.git
-   cd arguslm
-   ```
-
-2. **Configure environment**:
-   ```bash
-   cp .env.example .env
-   # Generate required secrets (choose one method):
-   
-   # Option A: Python script (requires cryptography package)
-   python scripts/generate-secrets.py >> .env
-   
-   # Option B: Docker one-liner (no local Python needed)
-   docker run --rm python:3.11-slim sh -c "pip install -q cryptography && python -c '
-     from cryptography.fernet import Fernet
-     import secrets
-     print(f\"ENCRYPTION_KEY={Fernet.generate_key().decode()}\")
-     print(f\"SECRET_KEY={secrets.token_urlsafe(32)}\")
-     print(f\"DB_PASSWORD={secrets.token_urlsafe(24)}\")
-   '" >> .env
-   ```
-
-3. **Start the services**:
-   ```bash
-   docker compose up -d
-   ```
-
-4. **Access the application**:
-   - Web UI: [http://localhost:3000](http://localhost:3000)
-   - API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Method 2: Local Development
-
-#### Backend Setup
-
-1. **Install dependencies**:
-   ```bash
-   pip install -e .
-   ```
-
-2. **Run migrations**:
-   ```bash
-   alembic upgrade head
-   ```
-
-3. **Start the FastAPI server**:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-#### Frontend Setup
-
-1. **Navigate to frontend directory**:
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-## ⚙️ Configuration
-
-ArgusLM can be configured using environment variables. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for a full reference.
-
-Key variables:
-- `DATABASE_URL`: Database connection string (default: `sqlite+aiosqlite:///./arguslm.db`)
-- `SECRET_KEY`: Secret key for encryption and security.
-- `ENCRYPTION_KEY`: Key used to encrypt provider credentials at rest.
-
-## 📖 Documentation
-
-- [Configuration Guide](docs/CONFIGURATION.md) - Detailed environment and provider setup.
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions.
-- **API Reference**: Available at `/docs` when the backend is running.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+**Dashboard**: http://localhost:3000 | **API Docs**: http://localhost:8000/docs
 
 ---
 
-*Named after Argus Panoptes, the all-seeing giant of Greek mythology who had a hundred eyes.*
+## Features
+
+| Category | Capabilities |
+|----------|-------------|
+| **Monitoring** | Automated uptime checks, real-time status, availability tracking, configurable intervals |
+| **Benchmarking** | Parallel multi-model tests, TTFT & TPS metrics, customizable prompt packs |
+| **Dashboard** | Live performance charts, latency trends, model comparison, failure markers |
+| **Alerting** | Downtime detection, performance degradation, in-app notifications |
+| **Providers** | 100+ via LiteLLM: OpenAI, Anthropic, Bedrock, Vertex, Azure, Ollama, LM Studio, xAI, DeepSeek, Fireworks |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         ArgusLM                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Frontend (React + Vite)           Backend (FastAPI)            │
+│  ┌─────────────────────┐           ┌──────────────────────┐    │
+│  │ Dashboard           │◄─────────►│ REST API + WebSocket │    │
+│  │ Benchmarks          │           │ Background Scheduler │    │
+│  │ Monitoring          │           │ Alert Engine         │    │
+│  │ Providers           │           └──────────┬───────────┘    │
+│  └─────────────────────┘                      │                 │
+│                                               ▼                 │
+│                              ┌─────────────────────────────┐   │
+│                              │  LiteLLM Abstraction Layer  │   │
+│                              └─────────────┬───────────────┘   │
+│                                            │                    │
+└────────────────────────────────────────────┼────────────────────┘
+                                             ▼
+              ┌──────────────────────────────────────────────────┐
+              │                  LLM Providers                   │
+              │  OpenAI │ Anthropic │ Bedrock │ Vertex │ Azure   │
+              │  Ollama │ LM Studio │ xAI │ DeepSeek │ 100+     │
+              └──────────────────────────────────────────────────┘
+```
+
+---
+
+## Key Metrics
+
+ArgusLM tracks metrics that matter for real-world LLM performance:
+
+- **TTFT** (Time to First Token) — User-perceived responsiveness
+- **TPS** (Tokens per Second) — Streaming throughput, excluding TTFT
+- **Latency** — End-to-end request time
+- **Availability** — Uptime percentage over time
+
+---
+
+## Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://...` |
+| `SECRET_KEY` | Session encryption key | *required* |
+| `ENCRYPTION_KEY` | Credential encryption (Fernet) | *required* |
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for provider setup and advanced options.
+
+---
+
+## Local Development
+
+**Backend:**
+```bash
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+**Frontend:**
+```bash
+cd frontend && npm install && npm run dev
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | FastAPI, Python 3.11+, SQLAlchemy, Alembic |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Recharts |
+| Database | PostgreSQL (prod) / SQLite (dev) |
+| Provider Abstraction | LiteLLM |
+
+---
+
+## Documentation
+
+- [Configuration Guide](docs/CONFIGURATION.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [API Reference](http://localhost:8000/docs) *(when running)*
+
+---
+
+## Contributing
+
+Contributions welcome! Please submit a Pull Request.
+
+## License
+
+[Apache License 2.0](LICENSE)
+
+---
+
+*Named after Argus Panoptes, the all-seeing giant of Greek mythology.*
