@@ -149,8 +149,10 @@ export function processLatencyComparison(uptimeChecks: UptimeCheck[]): LatencyMe
 function processAvailabilityHistory(checks: UptimeCheck[], bucketMinutes: number = 5): PerformanceMetric[] {
   const bucketMs = bucketMinutes * 60 * 1000;
   const buckets = new Map<number, Map<string, { up: number; total: number }>>();
+  const allModelNames = new Set<string>();
 
   checks.forEach(check => {
+    allModelNames.add(check.model_name);
     const time = new Date(check.created_at).getTime();
     const bucketTime = Math.floor(time / bucketMs) * bucketMs;
 
@@ -173,8 +175,9 @@ function processAvailabilityHistory(checks: UptimeCheck[], bucketMinutes: number
   return Array.from(buckets.entries())
     .map(([bucketTime, modelStats]) => {
       const result: PerformanceMetric = { time: new Date(bucketTime).toISOString() };
-      modelStats.forEach((stats, modelName) => {
-        result[modelName] = Math.round((stats.up / stats.total) * 100);
+      allModelNames.forEach(modelName => {
+        const stats = modelStats.get(modelName);
+        result[modelName] = stats ? Math.round((stats.up / stats.total) * 100) : null;
       });
       return result;
     })

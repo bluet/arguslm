@@ -102,7 +102,7 @@ const DashboardPage: React.FC = () => {
   }
 
   const modelNames = Array.from(new Set(
-    data?.performanceHistory.flatMap(item => Object.keys(item).filter(k => k !== 'time')) || []
+    data?.uptimeChecks.map(check => check.model_name) || []
   )).sort();
 
   return (
@@ -419,7 +419,7 @@ const DashboardPage: React.FC = () => {
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
-                    formatter={(value) => [`${value ?? 0}%`, 'Availability']}
+                    formatter={(value, name) => [`${value ?? 0}%`, name]}
                   />
                   <Legend />
                   {modelNames.map((modelName, index) => (
