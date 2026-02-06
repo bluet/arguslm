@@ -137,14 +137,17 @@ export default function BenchmarksPage() {
         if (msg.type === 'progress') {
           setProgress({ completed: msg.completed, total: msg.total });
         } else if (msg.type === 'result') {
-          setLiveResults(prev => [...prev, msg.data]);
+          if (msg.data?.model_name) {
+            setLiveResults(prev => [...prev, msg.data]);
+          } else {
+            console.error('Invalid result message - missing model_name:', msg);
+          }
         } else if (msg.type === 'complete') {
           setIsRunning(false);
-          loadHistory(); // Refresh history list
+          loadHistory();
           ws.close();
         } else if (msg.type === 'error') {
           console.error('Benchmark error:', msg.error);
-          // Don't stop immediately on error, let it finish or fail gracefully
         }
       } catch (e) {
         console.error('Error parsing WebSocket message:', e);
@@ -393,8 +396,8 @@ export default function BenchmarksPage() {
                       <div key={idx} className="flex items-center justify-between text-sm p-2 bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-100 dark:border-gray-700">
                         <span className="font-medium truncate max-w-[200px]">{res.model_name}</span>
                         <div className="flex space-x-4 text-gray-600 dark:text-gray-400 text-xs">
-                          <span>TTFT: {res.ttft_ms.toFixed(0)}ms</span>
-                          <span>TPS: {res.tps.toFixed(1)}</span>
+                          <span>TTFT: {res.ttft_ms?.toFixed(0) ?? '-'}ms</span>
+                          <span>TPS: {res.tps?.toFixed(1) ?? '-'}</span>
                           <span className={res.error ? "text-red-500" : "text-green-500"}>
                             {res.error ? "Failed" : "Success"}
                           </span>

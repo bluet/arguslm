@@ -32,7 +32,11 @@ from app.api.schemas.benchmark import (
     BenchmarkStartResponse,
     StatisticsResponse,
 )
-from app.core.benchmark_engine import BenchmarkConfig, calculate_statistics, run_benchmark
+from app.core.benchmark_engine import (
+    BenchmarkConfig,
+    calculate_statistics,
+    run_benchmark_stream,
+)
 from app.db.init import get_db
 from app.models.benchmark import BenchmarkResult, BenchmarkRun
 from app.models.model import Model
@@ -87,12 +91,9 @@ async def _run_benchmark_task(
             total_benchmarks = len(config.models) * config.num_runs
             _benchmark_progress[run_id] = {"completed": 0, "total": total_benchmarks}
 
-            # Run benchmarks
-            results = await run_benchmark(config)
+            model_names = {model.id: model.custom_name or model.model_id for model in config.models}
 
-            # Save results to database
-            for benchmark_result in results:
-                # Update run_id to match our run
+            async for benchmark_result in run_benchmark_stream(config):
                 db_result = BenchmarkResult(
                     run_id=run_id,
                     model_id=benchmark_result.model_id,
@@ -107,14 +108,30 @@ async def _run_benchmark_task(
                 )
                 db.add(db_result)
 
-                # Broadcast result
+                _benchmark_progress[run_id]["completed"] += 1
+                completed = _benchmark_progress[run_id]["completed"]
+
+                await _broadcast_to_run(
+                    run_id,
+                    {
+                        "type": "progress",
+                        "completed": completed,
+                        "total": total_benchmarks,
+                        "current_model": model_names.get(benchmark_result.model_id, "Unknown"),
+                    },
+                )
+
                 await _broadcast_to_run(
                     run_id,
                     {
                         "type": "result",
-                        "model_id": str(benchmark_result.model_id),
-                        "ttft_ms": benchmark_result.ttft_ms,
-                        "tps": benchmark_result.tps,
+                        "data": {
+                            "model_id": str(benchmark_result.model_id),
+                            "model_name": model_names.get(benchmark_result.model_id, "Unknown"),
+                            "ttft_ms": benchmark_result.ttft_ms,
+                            "tps": benchmark_result.tps_excluding_ttft,
+                            "error": benchmark_result.error,
+                        },
                     },
                 )
 

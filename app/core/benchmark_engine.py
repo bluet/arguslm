@@ -110,9 +110,18 @@ def calculate_statistics(values: list[float]) -> dict[str, float]:
 
 async def run_benchmark(config: BenchmarkConfig) -> list[BenchmarkResult]:
     """Run benchmarks on all models in parallel with throttling."""
+    results: list[BenchmarkResult] = []
+    async for result in run_benchmark_stream(config):
+        results.append(result)
+    return results
+
+
+async def run_benchmark_stream(config: BenchmarkConfig):
+    """Run benchmarks and yield results as they complete."""
     throttle = ThrottleConfig()
     semaphores = _init_semaphores(throttle)
-    tasks: list[tuple[Model, asyncio.Task[BenchmarkResult], bool]] = []
+    tasks: list[asyncio.Task[BenchmarkResult]] = []
+    task_metadata: list[tuple[Model, bool]] = []
     run_id = uuid.uuid4()
 
     for model in config.models:
@@ -139,20 +148,22 @@ async def run_benchmark(config: BenchmarkConfig) -> list[BenchmarkResult]:
                     run_id=run_id,
                 )
             )
-            tasks.append((model, task, is_warmup))
+            tasks.append(task)
+            task_metadata.append((model, is_warmup))
 
-    results = await asyncio.gather(*(task for _, task, _ in tasks), return_exceptions=True)
-
-    aggregated: list[BenchmarkResult] = []
-    for (model, _task, is_warmup), result in zip(tasks, results, strict=True):
-        if is_warmup:
-            continue
-        if isinstance(result, Exception):
-            aggregated.append(_error_result(run_id, model, result))
-        else:
-            aggregated.append(result)
-
-    return aggregated
+    pending = set(tasks)
+    while pending:
+        done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for completed_task in done:
+            idx = tasks.index(completed_task)
+            model, is_warmup = task_metadata[idx]
+            try:
+                result = completed_task.result()
+                if not is_warmup:
+                    yield result
+            except Exception as e:
+                if not is_warmup:
+                    yield _error_result(run_id, model, e)
 
 
 async def benchmark_single_model(
