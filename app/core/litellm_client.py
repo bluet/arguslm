@@ -216,7 +216,8 @@ class LiteLLMClient:
                     f"for model {config.model}"
                 )
 
-                # Build kwargs, omitting None api_key/api_base (for local providers like LM Studio)
+                # Build kwargs, omitting None values to avoid LiteLLM bugs
+                # LiteLLM checks "x in kwargs.get('metadata', {})" which fails if metadata=None
                 completion_kwargs = {
                     "model": config.model,
                     "messages": config.messages,
@@ -224,13 +225,14 @@ class LiteLLMClient:
                     "max_tokens": config.max_tokens,
                     "stream": False,
                     "timeout": config.timeout,
-                    "metadata": config.metadata,
                     **kwargs,
                 }
                 if config.api_key:
                     completion_kwargs["api_key"] = config.api_key
                 if config.api_base:
                     completion_kwargs["api_base"] = config.api_base
+                if config.metadata is not None:
+                    completion_kwargs["metadata"] = config.metadata
 
                 response = await acompletion(**completion_kwargs)
 
@@ -288,7 +290,8 @@ class LiteLLMClient:
                     f"Streaming attempt {attempt + 1}/{config.max_retries} for model {config.model}"
                 )
 
-                # Build kwargs, omitting None api_key/api_base (for local providers like LM Studio)
+                # Build kwargs, omitting None values to avoid LiteLLM bugs
+                # LiteLLM checks "x in kwargs.get('metadata', {})" which fails if metadata=None
                 stream_kwargs = {
                     "model": config.model,
                     "messages": config.messages,
@@ -296,13 +299,14 @@ class LiteLLMClient:
                     "max_tokens": config.max_tokens,
                     "stream": True,
                     "timeout": config.timeout,
-                    "metadata": config.metadata,
                     **kwargs,
                 }
                 if config.api_key:
                     stream_kwargs["api_key"] = config.api_key
                 if config.api_base:
                     stream_kwargs["api_base"] = config.api_base
+                if config.metadata is not None:
+                    stream_kwargs["metadata"] = config.metadata
 
                 response = await acompletion(**stream_kwargs)
 
