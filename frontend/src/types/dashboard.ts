@@ -40,12 +40,21 @@ export interface RecentActivityItem {
   status?: 'success' | 'failure' | 'warning' | 'info';
 }
 
+export interface FailureEvent {
+  time: string;
+  model_name: string;
+  status: string;
+  error?: string;
+}
+
 export interface DashboardData {
   stats: DashboardStats;
   uptimeChecks: UptimeCheck[];
   performanceHistory: PerformanceMetric[];
   ttftHistory: PerformanceMetric[];
   tpsHistory: PerformanceMetric[];
+  availabilityHistory: PerformanceMetric[];
+  failureEvents: FailureEvent[];
   latencyComparison: LatencyMetric[];
   recentActivity: RecentActivityItem[];
 }

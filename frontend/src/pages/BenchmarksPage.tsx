@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input';
 import { benchmarksApi } from '../api/benchmarks';
 import { modelsApi } from '../api/models';
 import { exportBenchmark } from '../api/export';
+import { getPromptPacks, PromptPack } from '../api/monitoring';
 import { BenchmarkRun, BenchmarkResult } from '../types/benchmark';
 import { Model } from '../types/model';
 
@@ -46,6 +47,7 @@ export default function BenchmarksPage() {
   const [models, setModels] = useState<Model[]>([]);
   const [history, setHistory] = useState<BenchmarkRun[]>([]);
   const [historyResults, setHistoryResults] = useState<Record<string, BenchmarkResult[]>>({});
+  const [promptPacks, setPromptPacks] = useState<PromptPack[]>([]);
   
   // Form State
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
@@ -68,6 +70,7 @@ export default function BenchmarksPage() {
   useEffect(() => {
     loadModels();
     loadHistory();
+    loadPromptPacks();
     
     return () => {
       if (wsRef.current) {
@@ -98,6 +101,15 @@ export default function BenchmarksPage() {
       setHistory(data);
     } catch (error) {
       console.error('Failed to load history:', error);
+    }
+  };
+
+  const loadPromptPacks = async () => {
+    try {
+      const data = await getPromptPacks();
+      setPromptPacks(data);
+    } catch (error) {
+      console.error('Failed to load prompt packs:', error);
     }
   };
 
@@ -320,10 +332,11 @@ export default function BenchmarksPage() {
                   disabled={isRunning}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 >
-                  <option value="shakespeare">Shakespeare (Creative)</option>
-                  <option value="synthetic_short">Synthetic Short (Quick)</option>
-                  <option value="synthetic_medium">Synthetic Medium (Standard)</option>
-                  <option value="synthetic_long">Synthetic Long (Stress Test)</option>
+                  {promptPacks.map(pack => (
+                    <option key={pack.id} value={pack.id}>
+                      {pack.name} ({pack.expected_tokens} tokens)
+                    </option>
+                  ))}
                 </select>
               </div>
 

@@ -1,7 +1,7 @@
 import { apiGet } from './client';
 import { UptimeCheck } from '../types/monitoring';
 import { BenchmarkRun } from '../types/benchmark';
-import { Alert, DashboardStats, PerformanceMetric, LatencyMetric, RecentActivityItem, DashboardData } from '../types/dashboard';
+import { Alert, DashboardStats, PerformanceMetric, LatencyMetric, RecentActivityItem, DashboardData, FailureEvent } from '../types/dashboard';
 
 interface UptimeListResponse {
   items: UptimeCheck[];
@@ -146,6 +146,53 @@ export function processLatencyComparison(uptimeChecks: UptimeCheck[]): LatencyMe
     }));
 }
 
+function processAvailabilityHistory(checks: UptimeCheck[], bucketMinutes: number = 5): PerformanceMetric[] {
+  const bucketMs = bucketMinutes * 60 * 1000;
+  const buckets = new Map<number, Map<string, { up: number; total: number }>>();
+
+  checks.forEach(check => {
+    const time = new Date(check.created_at).getTime();
+    const bucketTime = Math.floor(time / bucketMs) * bucketMs;
+
+    if (!buckets.has(bucketTime)) {
+      buckets.set(bucketTime, new Map());
+    }
+
+    const modelStats = buckets.get(bucketTime)!;
+    if (!modelStats.has(check.model_name)) {
+      modelStats.set(check.model_name, { up: 0, total: 0 });
+    }
+
+    const stats = modelStats.get(check.model_name)!;
+    stats.total += 1;
+    if (check.status === 'up') {
+      stats.up += 1;
+    }
+  });
+
+  return Array.from(buckets.entries())
+    .map(([bucketTime, modelStats]) => {
+      const result: PerformanceMetric = { time: new Date(bucketTime).toISOString() };
+      modelStats.forEach((stats, modelName) => {
+        result[modelName] = Math.round((stats.up / stats.total) * 100);
+      });
+      return result;
+    })
+    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+}
+
+function extractFailureEvents(checks: UptimeCheck[]): FailureEvent[] {
+  return checks
+    .filter(c => c.status !== 'up')
+    .map(c => ({
+      time: c.created_at,
+      model_name: c.model_name,
+      status: c.status,
+      error: c.error ?? undefined
+    }))
+    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+}
+
 export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert[], uptimeChecks: UptimeCheck[]): RecentActivityItem[] {
   const activity: RecentActivityItem[] = [];
 
@@ -190,6 +237,7 @@ export function generateRecentActivity(benchmarks: BenchmarkRun[], alerts: Alert
 
 export async function getDashboardData(timeRange: '5m' | '1h' | '24h' | '7d' | '30d' = '1h'): Promise<DashboardData> {
   const minutes = timeRange === '5m' ? 5 : timeRange === '1h' ? 60 : timeRange === '24h' ? 1440 : timeRange === '7d' ? 10080 : 43200;
+  const bucketMinutes = timeRange === '5m' ? 1 : timeRange === '1h' ? 5 : timeRange === '24h' ? 30 : timeRange === '7d' ? 180 : 720;
   
   const [rawUptimeChecks, benchmarks, uptimeHistory, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
@@ -205,6 +253,8 @@ export async function getDashboardData(timeRange: '5m' | '1h' | '24h' | '7d' | '
   const performanceHistory = processUptimeHistory(uptimeHistory, 'latency_ms');
   const ttftHistory = processUptimeHistory(uptimeHistory, 'ttft_ms');
   const tpsHistory = processUptimeHistory(uptimeHistory, 'tps');
+  const availabilityHistory = processAvailabilityHistory(uptimeHistory, bucketMinutes);
+  const failureEvents = extractFailureEvents(uptimeHistory);
   const latencyComparison = processLatencyComparison(uptimeChecks);
   const recentActivity = generateRecentActivity(benchmarks, alerts, uptimeChecks);
 
@@ -214,6 +264,8 @@ export async function getDashboardData(timeRange: '5m' | '1h' | '24h' | '7d' | '
     performanceHistory,
     ttftHistory,
     tpsHistory,
+    availabilityHistory,
+    failureEvents,
     latencyComparison,
     recentActivity
   };

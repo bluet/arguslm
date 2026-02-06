@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Settings, Clock, RefreshCw, Check, X, AlertTriangle, Play, Save, Search, Activity, Download } from 'lucide-react';
-import { getConfig, updateConfig, triggerRun, getUptimeHistory } from '../api/monitoring';
+import { getConfig, updateConfig, triggerRun, getUptimeHistory, getPromptPacks, PromptPack } from '../api/monitoring';
 import { modelsApi } from '../api/models';
 import { exportUptimeHistory } from '../api/export';
 import { MonitoringConfig, UptimeCheck } from '../types/monitoring';
@@ -17,6 +17,7 @@ const MonitoringPage: React.FC = () => {
   const [historyFilter, setHistoryFilter] = useState<'all' | 'up' | 'down'>('all');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [modelSearch, setModelSearch] = useState('');
+  const [promptPacks, setPromptPacks] = useState<PromptPack[]>([]);
   
   // Form state for config
   const [formConfig, setFormConfig] = useState<{
@@ -32,10 +33,11 @@ const MonitoringPage: React.FC = () => {
   // Fetch initial data
   const fetchData = async () => {
     try {
-      const [configData, modelsData, historyData] = await Promise.all([
+      const [configData, modelsData, historyData, promptPacksData] = await Promise.all([
         getConfig(),
         modelsApi.listAllModels(),
-        getUptimeHistory({ limit: 50 })
+        getUptimeHistory({ limit: 50 }),
+        getPromptPacks()
       ]);
 
       setConfig(configData);
@@ -46,6 +48,7 @@ const MonitoringPage: React.FC = () => {
       });
       setModels(modelsData);
       setUptimeHistory(historyData);
+      setPromptPacks(promptPacksData);
       
       // Set initial selected provider
       if (modelsData.length > 0) {
@@ -255,10 +258,11 @@ const MonitoringPage: React.FC = () => {
               onChange={(e) => setFormConfig(prev => ({ ...prev, prompt_pack: e.target.value }))}
               className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             >
-              <option value="shakespeare">Shakespeare</option>
-              <option value="synthetic_short">Synthetic Short</option>
-              <option value="synthetic_medium">Synthetic Medium</option>
-              <option value="synthetic_long">Synthetic Long</option>
+              {promptPacks.map(pack => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.name} ({pack.expected_tokens} tokens)
+                </option>
+              ))}
             </select>
           </div>
 

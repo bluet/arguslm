@@ -44,3 +44,14 @@ export const getMonitoredModels = async (): Promise<MonitoringModelConfig[]> => 
 export const updateMonitoredModels = async (modelIds: string[]): Promise<MonitoringModelConfig[]> => {
   return apiPost<MonitoringModelConfig[]>('/monitoring/models', { model_ids: modelIds });
 };
+
+export interface PromptPack {
+  id: string;
+  name: string;
+  prompt: string;
+  expected_tokens: number;
+}
+
+export const getPromptPacks = async (): Promise<PromptPack[]> => {
+  return apiGet<PromptPack[]>('/monitoring/prompt-packs');
+};

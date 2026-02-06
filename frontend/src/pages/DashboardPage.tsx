@@ -20,12 +20,20 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend,
-  ResponsiveContainer 
+  ResponsiveContainer,
+  ReferenceDot
 } from 'recharts';
 import { getDashboardData } from '../api/dashboard';
 import { DashboardData } from '../types/dashboard';
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const GOLDEN_ANGLE = 137.508;
+
+const generateDistinctColor = (index: number): string => {
+  const hue = (index * GOLDEN_ANGLE) % 360;
+  const saturation = 65 + (index % 3) * 10;
+  const lightness = 55 + (index % 2) * 10;
+  return `hsl(${hue.toFixed(0)}, ${saturation}%, ${lightness}%)`;
+};
 
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -95,7 +103,7 @@ const DashboardPage: React.FC = () => {
 
   const modelNames = Array.from(new Set(
     data?.performanceHistory.flatMap(item => Object.keys(item).filter(k => k !== 'time')) || []
-  ));
+  )).sort();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 transition-colors duration-200">
@@ -277,7 +285,7 @@ const DashboardPage: React.FC = () => {
                     axisLine={false}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                   <Legend />
@@ -286,7 +294,7 @@ const DashboardPage: React.FC = () => {
                       key={modelName}
                       type="monotone" 
                       dataKey={modelName} 
-                      stroke={COLORS[index % COLORS.length]} 
+                      stroke={generateDistinctColor(index)} 
                       strokeWidth={2}
                       dot={false}
                       activeDot={{ r: 4 }}
@@ -318,7 +326,7 @@ const DashboardPage: React.FC = () => {
                     axisLine={false}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                   <Legend />
@@ -327,7 +335,7 @@ const DashboardPage: React.FC = () => {
                       key={modelName}
                       type="monotone" 
                       dataKey={modelName} 
-                      stroke={COLORS[index % COLORS.length]} 
+                      stroke={generateDistinctColor(index)} 
                       strokeWidth={2}
                       dot={false}
                       activeDot={{ r: 4 }}
@@ -359,7 +367,7 @@ const DashboardPage: React.FC = () => {
                     axisLine={false}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                   <Legend />
@@ -368,13 +376,85 @@ const DashboardPage: React.FC = () => {
                       key={modelName}
                       type="monotone" 
                       dataKey={modelName} 
-                      stroke={COLORS[index % COLORS.length]} 
+                      stroke={generateDistinctColor(index)} 
                       strokeWidth={2}
                       dot={false}
                       activeDot={{ r: 4 }}
                       connectNulls
                     />
                   ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Availability History Chart */}
+            <div className="h-[400px]">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+                Model Availability (%)
+                {data?.failureEvents && data.failureEvents.length > 0 && (
+                  <span className="ml-2 text-xs text-red-500">
+                    • {data.failureEvents.length} failure event{data.failureEvents.length > 1 ? 's' : ''}
+                  </span>
+                )}
+              </h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.availabilityHistory}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="time" 
+                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke="#9CA3AF"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    domain={[0, 100]}
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
+                    wrapperStyle={{ zIndex: 1000 }}
+                    formatter={(value) => [`${value ?? 0}%`, 'Availability']}
+                  />
+                  <Legend />
+                  {modelNames.map((modelName, index) => (
+                    <Line 
+                      key={modelName}
+                      type="stepAfter" 
+                      dataKey={modelName} 
+                      stroke={generateDistinctColor(index)} 
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      connectNulls
+                    />
+                  ))}
+                  {data?.failureEvents?.map((event, index) => {
+                    const matchingDataPoint = data.availabilityHistory?.find(d => {
+                      const eventTime = new Date(event.time).getTime();
+                      const dataTime = new Date(d.time).getTime();
+                      return Math.abs(eventTime - dataTime) < 5 * 60 * 1000;
+                    });
+                    if (!matchingDataPoint) return null;
+                    const yValue = matchingDataPoint[event.model_name] as number | undefined;
+                    if (yValue === undefined) return null;
+                    return (
+                      <ReferenceDot
+                        key={`failure-${index}`}
+                        x={matchingDataPoint.time}
+                        y={yValue}
+                        r={6}
+                        fill="#EF4444"
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -408,7 +488,7 @@ const DashboardPage: React.FC = () => {
                     />
                     <Tooltip 
                       cursor={{ fill: '#F3F4F6' }}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                       formatter={(value, name) => {
                         const v = Number(value ?? 0);
                         if (name === 'tps') return [`${v.toFixed(1)} tok/s`, 'TPS'];
