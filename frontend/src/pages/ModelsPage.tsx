@@ -200,8 +200,13 @@ export const ModelsPage = () => {
                       <Badge variant="outline">{model.provider_name || model.provider_account_id}</Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant={model.source === 'manual' ? 'secondary' : 'outline'}>
-                        {model.source}
+                      <Badge 
+                        variant={model.source === 'manual' ? 'secondary' : 'outline'}
+                        title={(model.model_metadata?.note as string) || undefined}
+                      >
+                        {model.source === 'discovered' && (model.model_metadata as any)?.is_base_model
+                          ? 'catalog'
+                          : model.source}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-center">

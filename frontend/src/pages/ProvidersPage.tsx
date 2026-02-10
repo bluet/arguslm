@@ -10,7 +10,8 @@ import {
   Globe, 
   Activity,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Info
 } from 'lucide-react';
 import { 
   listProviders, 
@@ -385,6 +386,14 @@ export const ProvidersPage = () => {
                             </Button>
                           </div>
                         </div>
+                        {provider.provider_type === 'azure_openai' && (
+                          <div className="flex items-start gap-2 text-xs text-gray-500 px-1">
+                            <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>
+                              Azure lists available model types. To monitor a model, click 'Add Model' and enter your deployment name.
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-4 border-t border-gray-800 flex justify-end">
