@@ -26,9 +26,11 @@ export interface PerformanceMetric {
 
 export interface LatencyMetric {
   model_name: string;
+  display_name: string;
   latency: number;
   ttft: number;
   tps: number;
+  tps_scaled: number;
 }
 
 export interface RecentActivityItem {

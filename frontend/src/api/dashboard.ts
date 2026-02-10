@@ -37,15 +37,37 @@ export async function getUptimeChecks(enabledOnly: boolean = true): Promise<Upti
 }
 
 export async function getUptimeHistory(days: number = 1): Promise<UptimeCheck[]> {
-  const limit = Math.min(days * 24 * 60, 1000);
-  const response = await apiGet<UptimeListResponse>(`/monitoring/uptime?limit=${limit}`);
-  return response.items;
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  return fetchAllUptimePages(since);
 }
 
 export async function getUptimeHistoryByMinutes(minutes: number): Promise<UptimeCheck[]> {
-  const limit = Math.min(minutes * 10, 5000);
-  const response = await apiGet<UptimeListResponse>(`/monitoring/uptime?limit=${limit}`);
-  return response.items;
+  const since = new Date(Date.now() - minutes * 60 * 1000).toISOString();
+  return fetchAllUptimePages(since);
+}
+
+const PAGE_SIZE = 5000;
+
+async function fetchAllUptimePages(since: string): Promise<UptimeCheck[]> {
+  const first = await apiGet<UptimeListResponse>(
+    `/monitoring/uptime?limit=${PAGE_SIZE}&since=${since}`
+  );
+  if (first.total <= first.items.length) return first.items;
+
+  const allItems = [...first.items];
+  const remaining = first.total - first.items.length;
+  const pages = Math.ceil(remaining / PAGE_SIZE);
+
+  const pagePromises = Array.from({ length: pages }, (_, i) =>
+    apiGet<UptimeListResponse>(
+      `/monitoring/uptime?limit=${PAGE_SIZE}&offset=${(i + 1) * PAGE_SIZE}&since=${since}`
+    )
+  );
+  const results = await Promise.all(pagePromises);
+  for (const page of results) {
+    allItems.push(...page.items);
+  }
+  return allItems;
 }
 
 export async function getLatestBenchmarks(limit: number = 5): Promise<BenchmarkRun[]> {
@@ -135,15 +157,36 @@ function processUptimeHistory(checks: UptimeCheck[], metric: 'latency_ms' | 'ttf
     .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 }
 
+function formatDisplayName(name: string, providerType?: string | null): string {
+  if (providerType) {
+    return `${providerType}\n${name}`;
+  }
+  const parts = name.split('/');
+  if (parts.length >= 2) {
+    const provider = parts.slice(0, -1).join('/');
+    const model = parts[parts.length - 1];
+    return `${provider}\n${model}`;
+  }
+  return name;
+}
+
 export function processLatencyComparison(uptimeChecks: UptimeCheck[]): LatencyMetric[] {
   return uptimeChecks
     .filter(c => c.latency_ms !== null)
     .map(c => ({
       model_name: c.model_name,
+      display_name: formatDisplayName(c.model_name, c.provider_type),
       latency: c.latency_ms!,
       ttft: c.ttft_ms ?? 0,
-      tps: c.tps ?? 0
-    }));
+      tps: c.tps ?? 0,
+      tps_scaled: (c.tps ?? 0) * 10
+    }))
+    .sort((a, b) => {
+      const provA = a.display_name.split('\n')[0];
+      const provB = b.display_name.split('\n')[0];
+      if (provA !== provB) return provA.localeCompare(provB);
+      return a.model_name.localeCompare(b.model_name);
+    });
 }
 
 function processAvailabilityHistory(checks: UptimeCheck[], bucketMinutes: number = 5): PerformanceMetric[] {
@@ -242,13 +285,19 @@ export async function getDashboardData(timeRange: '5m' | '1h' | '24h' | '7d' | '
   const minutes = timeRange === '5m' ? 5 : timeRange === '1h' ? 60 : timeRange === '24h' ? 1440 : timeRange === '7d' ? 10080 : 43200;
   const bucketMinutes = timeRange === '5m' ? 1 : timeRange === '1h' ? 5 : timeRange === '24h' ? 30 : timeRange === '7d' ? 180 : 720;
   
-  const [rawUptimeChecks, benchmarks, uptimeHistory, alerts, modelCount] = await Promise.all([
+  const [rawUptimeChecks, benchmarks, rawUptimeHistory, alerts, modelCount] = await Promise.all([
     getUptimeChecks(),
     getLatestBenchmarks(10),
     getUptimeHistoryByMinutes(minutes),
     getAlerts(true),
     getModelCount()
   ]);
+
+  // Defense-in-depth: discard any data points outside the requested time window
+  const cutoff = Date.now() - minutes * 60 * 1000;
+  const uptimeHistory = rawUptimeHistory.filter(
+    check => new Date(check.created_at).getTime() >= cutoff
+  );
 
   const uptimeChecks = aggregateByModel(rawUptimeChecks);
 
