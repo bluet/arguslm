@@ -160,7 +160,7 @@ async def get_uptime_history(
     enabled_only: bool = Query(
         False, description="Only show checks for models with monitoring enabled"
     ),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum results to return"),
+    limit: int = Query(100, ge=1, le=10000, description="Maximum results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_db),
 ) -> UptimeHistoryResponse:
@@ -197,7 +197,9 @@ async def get_uptime_history(
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0
 
-    stmt = select(UptimeCheck).options(selectinload(UptimeCheck.model))
+    stmt = select(UptimeCheck).options(
+        selectinload(UptimeCheck.model).selectinload(Model.provider_account)
+    )
     if enabled_only:
         stmt = stmt.join(Model, UptimeCheck.model_id == Model.id)
     stmt = stmt.order_by(desc(UptimeCheck.created_at)).limit(limit).offset(offset)
@@ -212,11 +214,17 @@ async def get_uptime_history(
     items = []
     for check in checks:
         model_name = check.model.custom_name or check.model.model_id if check.model else "Unknown"
+        provider_type = (
+            check.model.provider_account.provider_type
+            if check.model and check.model.provider_account
+            else None
+        )
         items.append(
             UptimeCheckResponse(
                 id=check.id,
                 model_id=check.model_id,
                 model_name=model_name,
+                provider_type=provider_type,
                 status=check.status,
                 latency_ms=check.latency_ms,
                 ttft_ms=check.ttft_ms,

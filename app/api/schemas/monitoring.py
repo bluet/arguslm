@@ -55,6 +55,7 @@ class UptimeCheckResponse(BaseModel):
     id: UUID = Field(..., description="Check ID")
     model_id: UUID = Field(..., description="Model ID")
     model_name: str = Field(..., description="Model display name")
+    provider_type: Optional[str] = Field(None, description="Provider type (e.g. openai, lmstudio)")
     status: str = Field(..., description="Check status (up, down, degraded)")
     latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
     ttft_ms: Optional[float] = Field(None, description="Time to first token in milliseconds")
