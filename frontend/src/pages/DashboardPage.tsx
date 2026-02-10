@@ -63,6 +63,14 @@ const DashboardPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [timeRange]);
 
+  const formatXAxisTick = (time: string) => {
+    const date = new Date(time);
+    if (timeRange === '7d' || timeRange === '30d') {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const formatTimeWithTimezone = (dateString: string) => {
     const date = new Date(dateString);
     const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -272,7 +280,7 @@ const DashboardPage: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis 
                     dataKey="time" 
-                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    tickFormatter={formatXAxisTick}
                     stroke="#9CA3AF"
                     fontSize={12}
                     tickLine={false}
@@ -287,6 +295,8 @@ const DashboardPage: React.FC = () => {
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
+                    formatter={(value, name) => [`${Math.round(Number(value ?? 0))} ms`, name]}
+                    itemSorter={(item) => -(Number(item.value) || 0)}
                   />
                   <Legend />
                   {modelNames.map((modelName, index) => (
@@ -313,7 +323,7 @@ const DashboardPage: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis 
                     dataKey="time" 
-                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    tickFormatter={formatXAxisTick}
                     stroke="#9CA3AF"
                     fontSize={12}
                     tickLine={false}
@@ -328,6 +338,8 @@ const DashboardPage: React.FC = () => {
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
+                    formatter={(value, name) => [`${Math.round(Number(value ?? 0))} ms`, name]}
+                    itemSorter={(item) => -(Number(item.value) || 0)}
                   />
                   <Legend />
                   {modelNames.map((modelName, index) => (
@@ -354,7 +366,7 @@ const DashboardPage: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis 
                     dataKey="time" 
-                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    tickFormatter={formatXAxisTick}
                     stroke="#9CA3AF"
                     fontSize={12}
                     tickLine={false}
@@ -369,6 +381,8 @@ const DashboardPage: React.FC = () => {
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
+                    formatter={(value, name) => [`${Number(value ?? 0).toFixed(2)} tok/s`, name]}
+                    itemSorter={(item) => -(Number(item.value) || 0)}
                   />
                   <Legend />
                   {modelNames.map((modelName, index) => (
@@ -402,7 +416,7 @@ const DashboardPage: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis 
                     dataKey="time" 
-                    tickFormatter={(time) => new Date(time).toLocaleTimeString([], { hour: '2-digit' })}
+                    tickFormatter={formatXAxisTick}
                     stroke="#9CA3AF"
                     fontSize={12}
                     tickLine={false}
@@ -420,6 +434,7 @@ const DashboardPage: React.FC = () => {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                     wrapperStyle={{ zIndex: 1000 }}
                     formatter={(value, name) => [`${value ?? 0}%`, name]}
+                    itemSorter={(item) => -(Number(item.value) || 0)}
                   />
                   <Legend />
                   {modelNames.map((modelName, index) => (
@@ -466,7 +481,7 @@ const DashboardPage: React.FC = () => {
           {/* Performance Comparison */}
           <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Performance by Model</h2>
-            <div className="h-[400px]">
+            <div style={{ height: Math.max(400, (data?.latencyComparison?.length ?? 0) * 60 + 100) }}>
               {data?.latencyComparison && data.latencyComparison.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.latencyComparison} layout="vertical" margin={{ left: 10, right: 30 }}>
@@ -479,10 +494,24 @@ const DashboardPage: React.FC = () => {
                       axisLine={false}
                     />
                     <YAxis 
-                      dataKey="model_name" 
+                      dataKey="display_name" 
                       type="category" 
-                      width={100}
-                      tick={{ fontSize: 11, fill: '#6B7280' }}
+                      width={130}
+                      tick={({ x, y, payload }) => {
+                        const lines = (payload.value as string).split('\n');
+                        return (
+                          <text x={x} y={y} textAnchor="end" fill="#6B7280" fontSize={10}>
+                            {lines.length > 1 ? (
+                              <>
+                                <tspan x={x} dy="-0.4em" fill="#9CA3AF" fontSize={9}>{lines[0]}</tspan>
+                                <tspan x={x} dy="1.2em">{lines[1]}</tspan>
+                              </>
+                            ) : (
+                              <tspan>{lines[0]}</tspan>
+                            )}
+                          </text>
+                        );
+                      }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -491,14 +520,14 @@ const DashboardPage: React.FC = () => {
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)', backgroundColor: '#1f2937', color: '#f3f4f6' }}
                       formatter={(value, name) => {
                         const v = Number(value ?? 0);
-                        if (name === 'tps') return [`${v.toFixed(1)} tok/s`, 'TPS'];
-                        return [`${Math.round(v)}ms`, name === 'latency' ? 'Latency' : 'TTFT'];
+                        if (name === 'TPS ×10') return [`${(v / 10).toFixed(2)} tok/s`, 'TPS'];
+                        return [`${Math.round(v)} ms`, String(name)];
                       }}
                     />
                     <Legend />
                     <Bar dataKey="latency" name="Latency (ms)" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={8} />
                     <Bar dataKey="ttft" name="TTFT (ms)" fill="#10B981" radius={[0, 4, 4, 0]} barSize={8} />
-                    <Bar dataKey="tps" name="TPS" fill="#F59E0B" radius={[0, 4, 4, 0]} barSize={8} />
+                    <Bar dataKey="tps_scaled" name="TPS ×10" fill="#F59E0B" radius={[0, 4, 4, 0]} barSize={8} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
