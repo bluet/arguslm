@@ -8,17 +8,17 @@ ArgusLM is configured primarily through environment variables. This document pro
 |----------|-------------|---------|
 | `DATABASE_URL` | Database connection string. Supports SQLite and PostgreSQL. | `sqlite+aiosqlite:///./arguslm.db` |
 | `ENCRYPTION_KEY` | **Required.** Base64-encoded Fernet key for encrypting credentials at rest. | None |
-| `SECRET_KEY` | Secret key for session security and internal signing. | `dev-secret-key` |
+| `SECRET_KEY` | **Required.** Secret key for session security and internal signing. | None |
 | `API_TITLE` | Title shown in the API documentation. | `ArgusLM API` |
 | `CORS_ORIGINS` | Comma-separated list of allowed CORS origins. | `http://localhost:5173,http://localhost:3000` |
 | `LITELLM_LOG_LEVEL` | Logging level for the LiteLLM library. | `INFO` |
 
-### Generating an ENCRYPTION_KEY
+### Generating Secrets
 
-You can generate a valid encryption key using the following Python command:
+You can generate valid keys using the following Python command:
 
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python -c "from cryptography.fernet import Fernet; import secrets; print(f'ENCRYPTION_KEY={Fernet.generate_key().decode()}'); print(f'SECRET_KEY={secrets.token_urlsafe(32)}')"
 ```
 
 ## Provider Configuration
@@ -28,6 +28,10 @@ When adding a new provider account through the UI or API, you need to provide a 
 ### OpenAI
 - `api_key`: Your OpenAI API key.
 - `base_url` (optional): Custom endpoint if using a proxy.
+
+### Azure OpenAI
+- `api_key`: Your Azure OpenAI API key.
+- `base_url`: Your Azure endpoint URL (e.g., `https://your-resource.openai.azure.com/`).
 
 ### Anthropic
 - `api_key`: Your Anthropic API key.
@@ -43,6 +47,9 @@ When adding a new provider account through the UI or API, you need to provide a 
 
 ### Ollama (Local)
 - `base_url`: The URL where Ollama is running (default: `http://localhost:11434`).
+
+### LM Studio (Local)
+- `base_url`: The URL where LM Studio is running (e.g., `http://host.docker.internal:1234/v1`).
 
 ### OpenRouter
 - `api_key`: Your OpenRouter API key.

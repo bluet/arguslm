@@ -1,8 +1,10 @@
 # ArgusLM Frontend
 
+This frontend is part of ArgusLM. See the [main README](../README.md) for full documentation.
+
 This is the React-based frontend for ArgusLM - the hundred-eyed watcher for your LLM providers.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
@@ -25,7 +27,7 @@ npm run build
 ```
 The production-ready files will be generated in the `dist` directory.
 
-## 🛠 Tech Stack
+## Tech Stack
 - **Framework**: React 18
 - **Build Tool**: Vite
 - **Routing**: React Router 7
@@ -34,7 +36,7 @@ The production-ready files will be generated in the `dist` directory.
 - **Icons**: Lucide React
 - **Charts**: Recharts
 
-## 📁 Project Structure
+## Project Structure
 - `src/components`: Reusable UI components.
 - `src/pages`: Main application pages (Dashboard, Providers, Benchmarks, etc.).
 - `src/api`: API client and hooks for interacting with the backend.

@@ -6,15 +6,21 @@ This document covers common issues you might encounter while using ArgusLM and h
 
 ### Provider Connection Failures
 **Symptoms**: "Connection test failed" error when adding or testing a provider.
-- **Check API Keys**: Ensure your API keys are correct and have not expired.
-- **Network Access**: If running in Docker, ensure the container has internet access.
-- **Base URL**: For local providers like Ollama or LM Studio, ensure the `base_url` is accessible from within the Docker container (use `host.docker.internal` instead of `localhost` if necessary).
+- **API Keys**: Verify keys are correct and active.
+- **Network Access**: Ensure the environment (or Docker container) has internet access.
+- **Base URL**: For local providers (Ollama, LM Studio), use `host.docker.internal` instead of `localhost` if running ArgusLM in Docker.
+
+### LM Studio models not responding
+**Symptoms**: Requests to LM Studio time out or return errors.
+- **Model Loading**: Ensure the model is loaded in LM Studio and the Local Server is started.
+- **Base URL**: Verify the `base_url` includes the `/v1` suffix (e.g., `http://host.docker.internal:1234/v1`).
+- **CORS**: Ensure LM Studio's CORS settings allow the ArgusLM dashboard origin.
 
 ### Model Discovery Not Working
 **Symptoms**: No models appear after clicking "Refresh Models".
-- **Provider Support**: Not all providers support dynamic model discovery. For Anthropic or Mistral, we use a curated list.
-- **Permissions**: Ensure your API key has permissions to list models (e.g., OpenAI `v1/models` endpoint).
-- **Logs**: Check the backend logs for specific discovery errors.
+- **Provider Support**: Some providers (Anthropic, Mistral) use curated lists instead of dynamic discovery.
+- **Permissions**: Ensure the API key has permissions to list models.
+- **Logs**: Check backend logs for specific discovery errors.
 
 ### Database Migration Issues
 **Symptoms**: Application fails to start with database-related errors.
@@ -45,7 +51,7 @@ Logs are printed to the standard output of the terminal where you started the `u
 
 ## How to Reset the Database
 
-**⚠️ Warning: This will delete all your configuration, benchmark history, and monitoring data.**
+**Warning: This will delete all your configuration, benchmark history, and monitoring data.**
 
 ### SQLite (Local)
 1. Stop the application.
