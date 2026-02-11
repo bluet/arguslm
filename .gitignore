@@ -71,5 +71,11 @@ dist-ssr/
 logs/
 *.log
 
+# Temporary files
+tmp/
+
+# Debug screenshots (root-level only; docs/ images are fine)
+/*.png
+
 # IDE/Tool specific
 .sisyphus/
