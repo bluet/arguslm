@@ -7,19 +7,19 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.alert_evaluator import (
+from arguslm.server.core.alert_evaluator import (
     _evaluate_any_model_down,
     _evaluate_model_unavailable_everywhere,
     _evaluate_specific_model_down,
     _has_active_incident,
     evaluate_alerts,
 )
-from app.core.security import CredentialEncryption
-from app.models.alert import Alert, AlertRule
-from app.models.base import Base
-from app.models.model import Model
-from app.models.monitoring import UptimeCheck
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.models.alert import Alert, AlertRule
+from arguslm.server.models.base import Base
+from arguslm.server.models.model import Model
+from arguslm.server.models.monitoring import UptimeCheck
+from arguslm.server.models.provider import ProviderAccount
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

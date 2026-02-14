@@ -8,9 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.security import CredentialEncryption
-from app.models.base import Base
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.models.base import Base
+from arguslm.server.models.provider import ProviderAccount
 
 
 # Test database URL

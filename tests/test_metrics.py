@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.core.metrics import (
+from arguslm.server.core.metrics import (
     MODEL_PRICING,
     MetricsCollector,
     estimate_cost,

@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.core.uptime import check_uptime
-from app.models.model import Model
-from app.models.monitoring import UptimeCheck
+from arguslm.server.core.uptime import check_uptime
+from arguslm.server.models.model import Model
+from arguslm.server.models.monitoring import UptimeCheck
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def mock_model():
 @pytest.mark.asyncio
 async def test_check_uptime_success(mock_model):
     """Test successful uptime check."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
             "usage": {"prompt_tokens": 1, "completion_tokens": 1},
@@ -45,7 +45,7 @@ async def test_check_uptime_success(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_timeout(mock_model):
     """Test uptime check with timeout."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.side_effect = TimeoutError("Request timed out")
 
         result = await check_uptime(mock_model)
@@ -60,7 +60,7 @@ async def test_check_uptime_timeout(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_auth_error(mock_model):
     """Test uptime check with authentication error."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.side_effect = Exception("Authentication failed")
 
         result = await check_uptime(mock_model)
@@ -75,7 +75,7 @@ async def test_check_uptime_auth_error(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_service_unavailable(mock_model):
     """Test uptime check with service unavailable."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.side_effect = Exception("Service unavailable")
 
         result = await check_uptime(mock_model)
@@ -89,7 +89,7 @@ async def test_check_uptime_service_unavailable(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_latency_recorded(mock_model):
     """Test that latency is correctly recorded for successful checks."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
         }
@@ -105,7 +105,7 @@ async def test_check_uptime_latency_recorded(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_no_latency_on_failure(mock_model):
     """Test that latency is not recorded for failed checks."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.side_effect = Exception("Connection error")
 
         result = await check_uptime(mock_model)
@@ -118,7 +118,7 @@ async def test_check_uptime_no_latency_on_failure(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_uses_minimal_tokens(mock_model):
     """Test that uptime check uses minimal tokens (max_tokens=10)."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
         }
@@ -134,7 +134,7 @@ async def test_check_uptime_uses_minimal_tokens(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_uses_timeout(mock_model):
     """Test that uptime check uses 10 second timeout."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
         }
@@ -150,7 +150,7 @@ async def test_check_uptime_uses_timeout(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_uses_simple_prompt(mock_model):
     """Test that uptime check uses simple 'Hi' prompt."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
         }
@@ -166,7 +166,7 @@ async def test_check_uptime_uses_simple_prompt(mock_model):
 @pytest.mark.asyncio
 async def test_check_uptime_uses_correct_model_id(mock_model):
     """Test that uptime check uses the model's model_id."""
-    with patch("app.core.uptime.complete") as mock_complete:
+    with patch("arguslm.server.core.uptime.complete") as mock_complete:
         mock_complete.return_value = {
             "choices": [{"message": {"content": "Hi"}}],
         }

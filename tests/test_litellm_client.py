@@ -14,7 +14,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from typing import AsyncIterator
 
-from app.core.litellm_client import (
+from arguslm.server.core.litellm_client import (
     LiteLLMClient,
     ProviderConfig,
     ProviderType,
@@ -100,7 +100,7 @@ class TestLiteLLMClientNonStreaming:
         }
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.return_value = mock_response
 
@@ -122,7 +122,7 @@ class TestLiteLLMClientNonStreaming:
         mock_response = {"id": "test"}
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.return_value = mock_response
 
@@ -143,7 +143,7 @@ class TestLiteLLMClientNonStreaming:
     async def test_authentication_error_no_retry(self, client, mock_messages):
         """Authentication errors should not be retried."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = AuthenticationError(
                 message="Invalid API key", llm_provider="openai", model="gpt-4"
@@ -159,7 +159,7 @@ class TestLiteLLMClientNonStreaming:
     async def test_bad_request_error_no_retry(self, client, mock_messages):
         """Bad request errors should not be retried."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = BadRequestError(
                 message="Invalid parameter", model="gpt-4", llm_provider="openai"
@@ -176,7 +176,7 @@ class TestLiteLLMClientNonStreaming:
         mock_response = {"id": "success"}
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             # Fail twice, then succeed
             mock_acompletion.side_effect = [
@@ -194,7 +194,7 @@ class TestLiteLLMClientNonStreaming:
     async def test_rate_limit_retry_exhausted(self, client, mock_messages):
         """Rate limit errors should raise after max retries."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = RateLimitError(
                 message="Rate limit exceeded", llm_provider="openai", model="gpt-4"
@@ -211,7 +211,7 @@ class TestLiteLLMClientNonStreaming:
         mock_response = {"id": "success"}
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = [
                 Timeout(message="Request timeout", model="gpt-4", llm_provider="openai"),
@@ -229,7 +229,7 @@ class TestLiteLLMClientNonStreaming:
         mock_response = {"id": "success"}
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = [
                 ServiceUnavailableError(
@@ -262,7 +262,7 @@ class TestLiteLLMClientStreaming:
         ]
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.return_value = self.mock_stream_response(mock_chunks)
 
@@ -283,7 +283,7 @@ class TestLiteLLMClientStreaming:
     async def test_streaming_authentication_error(self, client, mock_messages):
         """Streaming authentication errors should not be retried."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = AuthenticationError(
                 message="Invalid API key", llm_provider="openai", model="gpt-4"
@@ -301,7 +301,7 @@ class TestLiteLLMClientStreaming:
         mock_chunks = [{"choices": [{"delta": {"content": "Success"}}]}]
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             # Fail once, then succeed
             mock_acompletion.side_effect = [
@@ -320,7 +320,7 @@ class TestLiteLLMClientStreaming:
     async def test_streaming_timeout_retry_exhausted(self, client, mock_messages):
         """Streaming timeout should raise after max retries."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = Timeout(
                 message="Request timeout", model="gpt-4", llm_provider="openai"
@@ -346,7 +346,7 @@ class TestConvenienceFunction:
         mock_response = {"id": "test"}
 
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.return_value = mock_response
 
@@ -400,7 +400,7 @@ class TestExponentialBackoff:
     async def test_exponential_backoff_timing(self, client, mock_messages):
         """Test that retry delays follow exponential backoff."""
         with patch(
-            "app.core.litellm_client.acompletion", new_callable=AsyncMock
+            "arguslm.server.core.litellm_client.acompletion", new_callable=AsyncMock
         ) as mock_acompletion:
             mock_acompletion.side_effect = RateLimitError(
                 message="Rate limit", llm_provider="openai", model="gpt-4"

@@ -11,13 +11,13 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.security import CredentialEncryption
-from app.db.init import get_db
-from app.main import app
-from app.models.base import Base
-from app.models.benchmark import BenchmarkResult
-from app.models.model import Model
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.db.init import get_db
+from arguslm.server.main import app
+from arguslm.server.models.base import Base
+from arguslm.server.models.benchmark import BenchmarkResult
+from arguslm.server.models.model import Model
+from arguslm.server.models.provider import ProviderAccount
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -273,7 +273,7 @@ async def test_delete_provider_with_history(client: TestClient, db_session: Asyn
     """Test deleting a provider with benchmark history returns 409."""
     from datetime import datetime, timezone
 
-    from app.models.benchmark import BenchmarkRun
+    from arguslm.server.models.benchmark import BenchmarkRun
 
     # Create test provider
     provider = ProviderAccount(
@@ -354,7 +354,7 @@ async def test_test_provider_connection_success(
     await db_session.refresh(provider)
 
     # Mock LiteLLM client
-    with patch("app.api.providers.LiteLLMClient") as mock_client_class:
+    with patch("arguslm.server.api.providers.LiteLLMClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.complete = AsyncMock(return_value={"id": "test-response-id", "choices": []})
         mock_client_class.return_value = mock_client
@@ -386,7 +386,7 @@ async def test_test_provider_connection_failure(
     await db_session.refresh(provider)
 
     # Mock LiteLLM client to raise exception
-    with patch("app.api.providers.LiteLLMClient") as mock_client_class:
+    with patch("arguslm.server.api.providers.LiteLLMClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.complete = AsyncMock(side_effect=Exception("Authentication failed"))
         mock_client_class.return_value = mock_client
@@ -415,7 +415,7 @@ async def test_refresh_provider_models(client: TestClient, db_session: AsyncSess
     await db_session.refresh(provider)
 
     # Mock OpenAIModelSource
-    with patch("app.api.providers.OpenAIModelSource") as mock_source_class:
+    with patch("arguslm.server.api.providers.OpenAIModelSource") as mock_source_class:
         mock_source = AsyncMock()
         mock_source.list_models = AsyncMock(
             return_value=[

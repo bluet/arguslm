@@ -5,14 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "arguslm"
 version = "0.1.0"
-description = "ArgusLM - The hundred-eyed watcher for your LLM providers"
+description = "ArgusLM — Open-source LLM monitoring & benchmarking SDK"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [{name = "Matthew Lien", email = "bluet@bluet.org"}]
-keywords = ["llm", "benchmark", "monitoring", "performance", "litellm", "openai", "anthropic"]
+keywords = ["llm", "benchmark", "monitoring", "performance", "litellm", "openai", "anthropic", "sdk"]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Framework :: FastAPI",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
@@ -20,23 +19,30 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Testing",
     "Topic :: System :: Monitoring",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.11"
+
+# SDK-only dependencies (lightweight — what `pip install arguslm` installs)
 dependencies = [
+    "httpx>=0.25.0,<1",
+    "pydantic>=2.5.0,<3",
+]
+
+[project.optional-dependencies]
+# Full server dependencies (what Docker/self-hosted deployment needs)
+server = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
     "sqlalchemy>=2.0.25",
     "asyncpg>=0.29.0",
     "litellm>=1.81.0,<2",
-    "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
     "python-multipart>=0.0.6",
     "cryptography>=41.0.0",
     "apscheduler>=3.10.0",
     "boto3>=1.34.0",
 ]
-
-[project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -47,13 +53,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://arguslm.com"
+Homepage = "https://github.com/bluet/arguslm"
 Documentation = "https://github.com/bluet/arguslm#readme"
 Repository = "https://github.com/bluet/arguslm"
 Issues = "https://github.com/bluet/arguslm/issues"
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["arguslm*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

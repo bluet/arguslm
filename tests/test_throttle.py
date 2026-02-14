@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from app.core.throttle import ThrottleManager, ThrottleProfile
+from arguslm.server.core.throttle import ThrottleManager, ThrottleProfile
 
 
 class TestThrottleProfile:

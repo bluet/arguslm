@@ -12,14 +12,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.security import CredentialEncryption
-from app.db.init import get_db
-from app.main import app
-from app.models.base import Base
-from app.models.benchmark import BenchmarkResult, BenchmarkRun
-from app.models.model import Model
-from app.models.monitoring import UptimeCheck
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.db.init import get_db
+from arguslm.server.main import app
+from arguslm.server.models.base import Base
+from arguslm.server.models.benchmark import BenchmarkResult, BenchmarkRun
+from arguslm.server.models.model import Model
+from arguslm.server.models.monitoring import UptimeCheck
+from arguslm.server.models.provider import ProviderAccount
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

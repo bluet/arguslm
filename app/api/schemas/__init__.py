@@ -1,1 +1,0 @@
-"""API schemas for request/response validation."""

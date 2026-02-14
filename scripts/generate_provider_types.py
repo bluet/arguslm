@@ -20,7 +20,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.providers import PROVIDER_CATALOG, TESTED_PROVIDERS
+from arguslm.server.core.providers import PROVIDER_CATALOG, TESTED_PROVIDERS
 
 
 def generate_typescript() -> str:

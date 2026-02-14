@@ -17,14 +17,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.security import CredentialEncryption
-from app.db.init import get_db
-from app.main import app
-from app.models.base import Base
-from app.models.benchmark import BenchmarkResult, BenchmarkRun
-from app.models.model import Model
-from app.models.monitoring import MonitoringConfig, UptimeCheck
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.db.init import get_db
+from arguslm.server.main import app
+from arguslm.server.models.base import Base
+from arguslm.server.models.benchmark import BenchmarkResult, BenchmarkRun
+from arguslm.server.models.model import Model
+from arguslm.server.models.monitoring import MonitoringConfig, UptimeCheck
+from arguslm.server.models.provider import ProviderAccount
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -116,7 +116,7 @@ class TestFlow1ProviderModelsBenchmark:
         assert "credentials" not in provider_data  # Should not expose credentials
 
         # Step 2: Trigger model discovery (mock the OpenAI model source)
-        with patch("app.api.providers.OpenAIModelSource") as mock_source_class:
+        with patch("arguslm.server.api.providers.OpenAIModelSource") as mock_source_class:
             mock_source = AsyncMock()
             mock_source.list_models = AsyncMock(
                 return_value=[
@@ -155,7 +155,7 @@ class TestFlow1ProviderModelsBenchmark:
         first_model_id = first_model["id"]
 
         # Step 4: Run benchmark on discovered models (mock LiteLLM completion)
-        with patch("app.api.benchmarks._run_benchmark_task", new_callable=AsyncMock):
+        with patch("arguslm.server.api.benchmarks._run_benchmark_task", new_callable=AsyncMock):
             benchmark_response = client.post(
                 "/api/v1/benchmarks",
                 json={
@@ -252,7 +252,7 @@ class TestFlow1ProviderModelsBenchmark:
         provider_id = provider_response.json()["id"]
 
         # Test connection (mock LiteLLM)
-        with patch("app.api.providers.LiteLLMClient") as mock_client_class:
+        with patch("arguslm.server.api.providers.LiteLLMClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.complete = AsyncMock(return_value={"id": "test-response-id", "choices": []})
             mock_client_class.return_value = mock_client
@@ -456,8 +456,8 @@ class TestFlow3AlertRulesNotifications:
     @pytest.mark.asyncio
     async def test_complete_alert_flow(self, client: TestClient, db_session: AsyncSession) -> None:
         """Test complete flow: create rules, simulate model down, verify alerts triggered."""
-        from app.core.alert_evaluator import evaluate_alerts
-        from app.models.alert import Alert, AlertRule
+        from arguslm.server.core.alert_evaluator import evaluate_alerts
+        from arguslm.server.models.alert import Alert, AlertRule
 
         # Step 1: Create provider and models
         provider = ProviderAccount(
@@ -596,8 +596,8 @@ class TestFlow3AlertRulesNotifications:
     @pytest.mark.asyncio
     async def test_alert_deduplication(self, client: TestClient, db_session: AsyncSession) -> None:
         """Test that duplicate alerts are not created for active incidents."""
-        from app.core.alert_evaluator import evaluate_alerts
-        from app.models.alert import Alert, AlertRule
+        from arguslm.server.core.alert_evaluator import evaluate_alerts
+        from arguslm.server.models.alert import Alert, AlertRule
 
         # Create provider and model
         provider = ProviderAccount(
@@ -675,7 +675,7 @@ class TestFlow3AlertRulesNotifications:
         self, client: TestClient, db_session: AsyncSession
     ) -> None:
         """Test that disabled alert rules are not evaluated."""
-        from app.core.alert_evaluator import evaluate_alerts
+        from arguslm.server.core.alert_evaluator import evaluate_alerts
 
         # Create provider and model
         provider = ProviderAccount(
@@ -747,7 +747,7 @@ class TestErrorScenarios:
         provider_id = provider_response.json()["id"]
 
         # Test connection with failure
-        with patch("app.api.providers.LiteLLMClient") as mock_client_class:
+        with patch("arguslm.server.api.providers.LiteLLMClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.complete = AsyncMock(
                 side_effect=Exception("Authentication failed: Invalid API key")
@@ -779,7 +779,7 @@ class TestErrorScenarios:
         provider_id = provider_response.json()["id"]
 
         # Model discovery fails
-        with patch("app.api.providers.OpenAIModelSource") as mock_source_class:
+        with patch("arguslm.server.api.providers.OpenAIModelSource") as mock_source_class:
             mock_source = AsyncMock()
             mock_source.list_models = AsyncMock(side_effect=Exception("API rate limit exceeded"))
             mock_source_class.return_value = mock_source
@@ -941,7 +941,7 @@ class TestCombinedFlows:
         self, client: TestClient, db_session: AsyncSession
     ) -> None:
         """Test complete flow from model setup to alert notification."""
-        from app.core.alert_evaluator import evaluate_alerts
+        from arguslm.server.core.alert_evaluator import evaluate_alerts
 
         # Step 1: Create provider via API
         provider_response = client.post(
@@ -956,7 +956,7 @@ class TestCombinedFlows:
         provider_id = provider_response.json()["id"]
 
         # Step 2: Add models via mock discovery
-        with patch("app.api.providers.OpenAIModelSource") as mock_source_class:
+        with patch("arguslm.server.api.providers.OpenAIModelSource") as mock_source_class:
             mock_source = AsyncMock()
             mock_source.list_models = AsyncMock(
                 return_value=[

@@ -14,7 +14,7 @@ services:
       ENCRYPTION_KEY: "${ENCRYPTION_KEY:?ENCRYPTION_KEY required - run: python scripts/generate-secrets.py >> .env}"
       LITELLM_LOG_LEVEL: "${LITELLM_LOG_LEVEL:-INFO}"
     volumes:
-      - ./app:/app/app
+      - ./arguslm:/app/arguslm
       - ./tests:/app/tests
       - backend_data:/app/data
     healthcheck:

@@ -11,10 +11,10 @@ from typing import Any, AsyncIterator, cast
 
 pytest = importlib.import_module("pytest")
 
-from app.core import benchmark_engine
-from app.core.benchmark_engine import BenchmarkConfig, BenchmarkResult
-from app.models.model import Model
-from app.models.provider import ProviderAccount
+from arguslm.server.core import benchmark_engine
+from arguslm.server.core.benchmark_engine import BenchmarkConfig, BenchmarkResult
+from arguslm.server.models.model import Model
+from arguslm.server.models.provider import ProviderAccount
 
 
 def _make_model(index: int, provider_type: str = "openai") -> Model:

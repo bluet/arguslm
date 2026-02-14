@@ -7,10 +7,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.security import CredentialEncryption
-from app.models.base import Base
-from app.models.model import Model, create_manual_model, update_custom_name, validate_model_id
-from app.models.provider import ProviderAccount
+from arguslm.server.core.security import CredentialEncryption
+from arguslm.server.models.base import Base
+from arguslm.server.models.model import Model, create_manual_model, update_custom_name, validate_model_id
+from arguslm.server.models.provider import ProviderAccount
 
 # Test encryption key
 TEST_ENCRYPTION_KEY = CredentialEncryption.generate_key()

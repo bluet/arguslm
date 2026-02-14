@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from app.discovery.base import ModelDescriptor
-from app.discovery.ollama import OllamaModelSource
-from app.discovery.openai import OpenAIModelSource
-from app.discovery.static import (
+from arguslm.server.discovery.base import ModelDescriptor
+from arguslm.server.discovery.ollama import OllamaModelSource
+from arguslm.server.discovery.openai import OpenAIModelSource
+from arguslm.server.discovery.static import (
     MISTRAL_MODELS,
     StaticModelSource,
     get_source_for_provider,

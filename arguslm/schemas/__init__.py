@@ -1,0 +1,83 @@
+"""ArgusLM API schemas — shared between SDK client and server."""
+
+from arguslm.schemas.alert import (
+    AlertListResponse,
+    AlertResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    RecentAlertsResponse,
+    UnreadCountResponse,
+)
+from arguslm.schemas.benchmark import (
+    BenchmarkCreate,
+    BenchmarkDetailResponse,
+    BenchmarkListResponse,
+    BenchmarkResultListResponse,
+    BenchmarkResultResponse,
+    BenchmarkRunResponse,
+    BenchmarkStartResponse,
+    StatisticsResponse,
+    WebSocketMessage,
+)
+from arguslm.schemas.model import (
+    ModelCreate,
+    ModelListResponse,
+    ModelResponse,
+    ModelUpdate,
+)
+from arguslm.schemas.monitoring import (
+    MonitoringConfigResponse,
+    MonitoringConfigUpdate,
+    MonitoringRunResponse,
+    PromptPackResponse,
+    UptimeCheckResponse,
+    UptimeHistoryResponse,
+)
+from arguslm.schemas.provider import (
+    ProviderCatalogResponse,
+    ProviderCreate,
+    ProviderListResponse,
+    ProviderRefreshResponse,
+    ProviderResponse,
+    ProviderSpecResponse,
+    ProviderTestResponse,
+    ProviderUpdate,
+)
+
+__all__ = [
+    "AlertListResponse",
+    "AlertResponse",
+    "AlertRuleCreate",
+    "AlertRuleResponse",
+    "AlertRuleUpdate",
+    "BenchmarkCreate",
+    "BenchmarkDetailResponse",
+    "BenchmarkListResponse",
+    "BenchmarkResultListResponse",
+    "BenchmarkResultResponse",
+    "BenchmarkRunResponse",
+    "BenchmarkStartResponse",
+    "ModelCreate",
+    "ModelListResponse",
+    "ModelResponse",
+    "ModelUpdate",
+    "MonitoringConfigResponse",
+    "MonitoringConfigUpdate",
+    "MonitoringRunResponse",
+    "PromptPackResponse",
+    "ProviderCatalogResponse",
+    "ProviderCreate",
+    "ProviderListResponse",
+    "ProviderRefreshResponse",
+    "ProviderResponse",
+    "ProviderSpecResponse",
+    "ProviderTestResponse",
+    "ProviderUpdate",
+    "RecentAlertsResponse",
+    "StatisticsResponse",
+    "UnreadCountResponse",
+    "UptimeCheckResponse",
+    "UptimeHistoryResponse",
+    "WebSocketMessage",
+]
