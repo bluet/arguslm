@@ -1,18 +1,45 @@
-# ArgusLM
-
-**The hundred-eyed watcher for your LLM providers.**
+# ArgusLM — Open-Source LLM Monitoring & Benchmarking
 
 [![License](https://img.shields.io/github/license/bluet/arguslm?style=flat-square)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/bluet/arguslm?style=social)](https://github.com/bluet/arguslm/stargazers)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square)](docker-compose.yml)
 
+> Know exactly which LLM providers are up, which are fastest,
+> and which are degrading — before your users notice.
+
 ![ArgusLM Dashboard Overview](docs/images/dashboard-overview.png)
 
-ArgusLM provides comprehensive monitoring and benchmarking for the modern LLM ecosystem. Gain deep visibility into uptime, Time to First Token (TTFT), and Tokens per Second (TPS) across 100+ providers—including OpenAI, Anthropic, AWS Bedrock, Google Vertex, and local instances like Ollama and LM Studio—all through a single, unified dashboard.
+## The Problem
 
-> *In Greek mythology, Argus Panoptes was a giant with a hundred eyes. ArgusLM watches over your hundred providers.*
+Modern AI architectures use dozens of LLM providers across services — OpenAI, Anthropic, Bedrock, Vertex, local Ollama, custom endpoints — each with different availability, latency, and throughput characteristics. When providers fail or slow down, you find out from support tickets, not monitoring dashboards. Existing tools are either SaaS-only (expensive, locked-in), infrastructure-focused (can't probe LLM APIs), or require complex instrumentation (changes your code).
+
+## Why ArgusLM?
+
+| Aspect | Datadog / Langfuse | Prometheus | LLM Overwatch | **ArgusLM** |
+|--------|-------------------|-----------|---------------|-------------|
+| Deployment | SaaS-only | Self-hosted | SaaS-only | Self-hosted |
+| Local Models | ❌ No | ❌ No | ❌ No | ✅ Ollama, LM Studio, local APIs |
+| Probing vs Tracing | Tracing only | Infrastructure only | Probing only | Both (probing + tracing) |
+| Metrics | Request-level | Node-level | Response time | TTFT, TPS, latency, uptime |
+| Pricing | $$$$ | Free | $$$ | ✅ Free & Open-Source |
+| Extensible | Limited | Limited | No | ✅ Full Python SDK + HTTP API |
+
+**What makes ArgusLM unique:** The only open-source tool that actively probes any LLM provider (including local Ollama/LM Studio) for real uptime, Time to First Token (TTFT), Tokens per Second (TPS), and latency — with a unified Python SDK for custom automation.
+
+## Use Cases
+
+**ArgusLM is for you if:**
+
+- **You're building production AI systems** — Monitor uptime and performance of multiple LLM providers in real-time, detect degradations before users do.
+- **You run self-hosted LLM deployments** — Track local Ollama/LM Studio availability and response metrics alongside cloud providers in one dashboard.
+- **You provider LLM-based services** — Know exactly which provider to route traffic to based on real performance data, not assumptions or marketing claims.
+- **You need automated benchmarking** — Run scheduled comparisons between models (GPT-4 vs Claude vs local Llama) to optimize costs and quality.
+- **You must keep costs private** — Self-hosted, no SaaS lock-in, full control over your observability data.
 
 ---
+
+## Quick Start
 
 ## Quick Start
 
@@ -42,26 +69,6 @@ docker compose up -d
 | Visualization | Live performance charts, historical trends, and side-by-side model comparisons. |
 | Alerting | Proactive downtime detection and performance degradation notifications. |
 | Integration | Native support for 100+ providers via LiteLLM abstraction. |
-
----
-
-## Performance Insights
-
-![Performance Trends](docs/images/dashboard-performance.png)
-*Real-time tracking of latency and throughput trends across all configured providers.*
-
-![Model Comparison](docs/images/dashboard-comparison.png)
-*Side-by-side performance comparison to identify the most efficient models for your workload.*
-
----
-
-## Monitoring and Benchmarking
-
-![Monitoring Configuration](docs/images/monitoring.png)
-*Configure granular monitoring intervals and thresholds for each provider.*
-
-![Benchmark Runner](docs/images/benchmarks.png)
-*Execute standardized benchmark suites to validate provider performance under load.*
 
 ---
 
@@ -96,6 +103,78 @@ ArgusLM is built for scale and reliability, leveraging a modern asynchronous sta
 
 ---
 
+## Usage Examples
+
+### Trigger Monitoring (HTTP API)
+
+```bash
+# Trigger a manual monitoring run
+curl -X POST http://localhost:8000/api/v1/monitoring/run
+
+# Get current monitoring configuration
+curl http://localhost:8000/api/v1/monitoring/config
+
+# Get uptime history for all providers (last 100 checks)
+curl "http://localhost:8000/api/v1/monitoring/uptime?limit=100"
+```
+
+### Run Benchmarks (HTTP API)
+
+```bash
+# Start benchmark for specific models
+curl -X POST http://localhost:8000/api/v1/benchmarks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_ids": ["uuid-1", "uuid-2"],
+    "prompt_pack": "health_check",
+    "max_tokens": 100,
+    "num_runs": 5
+  }'
+
+# List all benchmarks
+curl http://localhost:8000/api/v1/benchmarks
+
+# Get results for specific benchmark run
+curl http://localhost:8000/api/v1/benchmarks/{run_id}/results
+```
+
+### Python SDK
+
+```bash
+pip install arguslm
+```
+
+```python
+from arguslm import ArgusLMClient
+from arguslm.schemas import BenchmarkCreate
+
+with ArgusLMClient(base_url="http://localhost:8000") as client:
+    # Check provider uptime
+    uptime = client.get_uptime_history(limit=10)
+    for check in uptime.items:
+        print(f"{check.model_name}: {check.status} ({check.ttft_ms}ms TTFT)")
+
+    # Run a benchmark
+    benchmark = client.start_benchmark(BenchmarkCreate(
+        model_ids=["uuid-1", "uuid-2"],
+        prompt_pack="shakespeare",
+        num_runs=3,
+    ))
+    print(f"Benchmark started: {benchmark.id}")
+```
+
+Async support:
+
+```python
+from arguslm import AsyncArgusLMClient
+
+async with AsyncArgusLMClient() as client:
+    config = await client.get_monitoring_config()
+    providers = await client.list_providers()
+```
+
+---
+
 ## Key Metrics
 
 ArgusLM tracks the metrics that define real-world LLM performance:
@@ -104,6 +183,25 @@ ArgusLM tracks the metrics that define real-world LLM performance:
 - **Tokens per Second (TPS)**: Evaluate sustained streaming throughput independent of initial latency.
 - **End-to-End Latency**: Track total request duration for non-streaming workloads.
 - **Availability**: Monitor uptime and reliability trends with granular failure analysis.
+
+---
+
+<details>
+<summary>Dashboard Screenshots</summary>
+
+![Performance Trends](docs/images/dashboard-performance.png)
+*Real-time tracking of latency and throughput trends across all configured providers.*
+
+![Model Comparison](docs/images/dashboard-comparison.png)
+*Side-by-side performance comparison to identify the most efficient models for your workload.*
+
+![Monitoring Configuration](docs/images/monitoring.png)
+*Configure granular monitoring intervals and thresholds for each provider.*
+
+![Benchmark Runner](docs/images/benchmarks.png)
+*Execute standardized benchmark suites to validate provider performance under load.*
+
+</details>
 
 ---
 
@@ -123,9 +221,9 @@ Detailed setup instructions are available in the [Configuration Guide](docs/CONF
 
 ### Backend
 ```bash
-pip install -e .
+pip install -e ".[server]"
 alembic upgrade head
-uvicorn app.main:app --reload
+uvicorn arguslm.server.main:app --reload
 ```
 
 ### Frontend
@@ -148,10 +246,23 @@ npm run dev
 
 ---
 
+## Installation
+
+```bash
+# SDK only (lightweight — for querying an ArgusLM instance)
+pip install arguslm
+
+# Full server (for self-hosted deployment without Docker)
+pip install arguslm[server]
+```
+
+---
+
 ## Documentation
 
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Comparison with Alternatives](docs/comparison.md)
 - [API Reference](http://localhost:8000/docs)
 
 ---
