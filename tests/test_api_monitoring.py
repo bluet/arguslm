@@ -135,7 +135,7 @@ class TestGetMonitoringConfig:
         assert response.status_code == 200
         data = response.json()
         assert data["interval_minutes"] == 15
-        assert data["prompt_pack"] == "shakespeare"
+        assert data["prompt_pack"] == "health_check"
         assert data["enabled"] is True
         assert data["last_run_at"] is None
 

@@ -354,11 +354,10 @@ class TestStaticModelSource:
 class TestGetSourceForProvider:
     """Tests for get_source_for_provider factory function."""
 
-    def test_anthropic_returns_static_source(self):
-        """Test Anthropic gets static source."""
+    def test_anthropic_returns_none(self):
+        """Test Anthropic returns None (uses dynamic discovery, not static registry)."""
         source = get_source_for_provider("anthropic")
-        assert isinstance(source, StaticModelSource)
-        assert source.provider_type == "anthropic"
+        assert source is None
 
     def test_mistral_returns_static_source(self):
         """Test Mistral gets static source."""

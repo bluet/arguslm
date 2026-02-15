@@ -16,8 +16,6 @@ from typing import AsyncIterator
 
 from arguslm.server.core.litellm_client import (
     LiteLLMClient,
-    ProviderConfig,
-    ProviderType,
     CompletionConfig,
     complete,
 )
@@ -46,40 +44,6 @@ def client():
 def mock_messages():
     """Sample messages for testing."""
     return [{"role": "user", "content": "Hello, how are you?"}]
-
-
-class TestProviderConfig:
-    """Tests for provider configuration mapping."""
-
-    def test_openai_no_prefix(self):
-        """OpenAI models should not have prefix."""
-        result = ProviderConfig.get_model_name(ProviderType.OPENAI, "gpt-4")
-        assert result == "gpt-4"
-
-    def test_anthropic_prefix(self):
-        """Anthropic models should have anthropic/ prefix."""
-        result = ProviderConfig.get_model_name(ProviderType.ANTHROPIC, "claude-3-opus")
-        assert result == "anthropic/claude-3-opus"
-
-    def test_azure_prefix(self):
-        """Azure models should have azure/ prefix."""
-        result = ProviderConfig.get_model_name(ProviderType.AZURE, "gpt-4")
-        assert result == "azure/gpt-4"
-
-    def test_bedrock_prefix(self):
-        """Bedrock models should have bedrock/ prefix."""
-        result = ProviderConfig.get_model_name(ProviderType.BEDROCK, "anthropic.claude-v2")
-        assert result == "bedrock/anthropic.claude-v2"
-
-    def test_avoid_double_prefix(self):
-        """Should not double-prefix if model already has prefix."""
-        result = ProviderConfig.get_model_name(ProviderType.ANTHROPIC, "anthropic/claude-3-opus")
-        assert result == "anthropic/claude-3-opus"
-
-    def test_all_providers_have_mapping(self):
-        """All provider types should have a mapping."""
-        for provider in ProviderType:
-            assert provider in ProviderConfig.PROVIDER_PREFIXES
 
 
 class TestLiteLLMClientNonStreaming:
