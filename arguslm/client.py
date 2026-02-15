@@ -20,6 +20,8 @@ from arguslm.schemas.alert import (
     AlertRuleCreate,
     AlertRuleResponse,
     AlertRuleUpdate,
+    RecentAlertsResponse,
+    UnreadCountResponse,
 )
 from arguslm.schemas.benchmark import (
     BenchmarkCreate,
@@ -201,6 +203,29 @@ class ArgusLMClient:
         resp = self._get("/api/v1/monitoring/prompt-packs")
         return [PromptPackResponse.model_validate(p) for p in resp.json()]
 
+    def export_uptime_history(
+        self,
+        *,
+        format: str = "json",
+        model_id: UUID | str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> httpx.Response:
+        """Export uptime history as a downloadable file (JSON or CSV).
+
+        Returns the raw httpx.Response so callers can access .text, .content,
+        and Content-Disposition headers directly.
+        """
+        params: dict[str, Any] = {"format": format}
+        if model_id is not None:
+            params["model_id"] = str(model_id)
+        if start_date is not None:
+            params["start_date"] = start_date
+        if end_date is not None:
+            params["end_date"] = end_date
+
+        return self._get("/api/v1/monitoring/uptime/export", params=params)
+
     # ------------------------------------------------------------------
     # Benchmarks
     # ------------------------------------------------------------------
@@ -226,6 +251,22 @@ class ArgusLMClient:
     def get_benchmark_results(self, run_id: UUID | str) -> BenchmarkResultListResponse:
         resp = self._get(f"/api/v1/benchmarks/{run_id}/results")
         return BenchmarkResultListResponse.model_validate(resp.json())
+
+    def export_benchmark(
+        self,
+        run_id: UUID | str,
+        *,
+        format: str = "json",
+    ) -> httpx.Response:
+        """Export benchmark results as a downloadable file (JSON or CSV).
+
+        Returns the raw httpx.Response so callers can access .text, .content,
+        and Content-Disposition headers directly.
+        """
+        return self._get(
+            f"/api/v1/benchmarks/{run_id}/export",
+            params={"format": format},
+        )
 
     # ------------------------------------------------------------------
     # Providers
@@ -303,6 +344,11 @@ class ArgusLMClient:
         resp = self._get("/api/v1/models", params=params)
         return ModelListResponse.model_validate(resp.json())
 
+    def get_model(self, model_id: UUID | str) -> ModelResponse:
+        """Get a specific model by ID."""
+        resp = self._get(f"/api/v1/models/{model_id}")
+        return ModelResponse.model_validate(resp.json())
+
     def create_model(self, model: ModelCreate) -> ModelResponse:
         resp = self._post(
             "/api/v1/models",
@@ -367,6 +413,14 @@ class ArgusLMClient:
     def acknowledge_alert(self, alert_id: UUID | str) -> AlertResponse:
         resp = self._patch(f"/api/v1/alerts/{alert_id}/acknowledge")
         return AlertResponse.model_validate(resp.json())
+
+    def get_unread_alert_count(self) -> UnreadCountResponse:
+        resp = self._get("/api/v1/alerts/unread-count")
+        return UnreadCountResponse.model_validate(resp.json())
+
+    def get_recent_alerts(self, *, limit: int = 10) -> RecentAlertsResponse:
+        resp = self._get("/api/v1/alerts/recent", params={"limit": limit})
+        return RecentAlertsResponse.model_validate(resp.json())
 
 
 class AsyncArgusLMClient:
@@ -508,6 +562,24 @@ class AsyncArgusLMClient:
         resp = await self._get("/api/v1/monitoring/prompt-packs")
         return [PromptPackResponse.model_validate(p) for p in resp.json()]
 
+    async def export_uptime_history(
+        self,
+        *,
+        format: str = "json",
+        model_id: UUID | str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> httpx.Response:
+        params: dict[str, Any] = {"format": format}
+        if model_id is not None:
+            params["model_id"] = str(model_id)
+        if start_date is not None:
+            params["start_date"] = start_date
+        if end_date is not None:
+            params["end_date"] = end_date
+
+        return await self._get("/api/v1/monitoring/uptime/export", params=params)
+
     # ------------------------------------------------------------------
     # Benchmarks
     # ------------------------------------------------------------------
@@ -533,6 +605,17 @@ class AsyncArgusLMClient:
     async def get_benchmark_results(self, run_id: UUID | str) -> BenchmarkResultListResponse:
         resp = await self._get(f"/api/v1/benchmarks/{run_id}/results")
         return BenchmarkResultListResponse.model_validate(resp.json())
+
+    async def export_benchmark(
+        self,
+        run_id: UUID | str,
+        *,
+        format: str = "json",
+    ) -> httpx.Response:
+        return await self._get(
+            f"/api/v1/benchmarks/{run_id}/export",
+            params={"format": format},
+        )
 
     # ------------------------------------------------------------------
     # Providers
@@ -610,6 +693,10 @@ class AsyncArgusLMClient:
         resp = await self._get("/api/v1/models", params=params)
         return ModelListResponse.model_validate(resp.json())
 
+    async def get_model(self, model_id: UUID | str) -> ModelResponse:
+        resp = await self._get(f"/api/v1/models/{model_id}")
+        return ModelResponse.model_validate(resp.json())
+
     async def create_model(self, model: ModelCreate) -> ModelResponse:
         resp = await self._post(
             "/api/v1/models",
@@ -674,6 +761,14 @@ class AsyncArgusLMClient:
     async def acknowledge_alert(self, alert_id: UUID | str) -> AlertResponse:
         resp = await self._patch(f"/api/v1/alerts/{alert_id}/acknowledge")
         return AlertResponse.model_validate(resp.json())
+
+    async def get_unread_alert_count(self) -> UnreadCountResponse:
+        resp = await self._get("/api/v1/alerts/unread-count")
+        return UnreadCountResponse.model_validate(resp.json())
+
+    async def get_recent_alerts(self, *, limit: int = 10) -> RecentAlertsResponse:
+        resp = await self._get("/api/v1/alerts/recent", params={"limit": limit})
+        return RecentAlertsResponse.model_validate(resp.json())
 
 
 def _clean_params(

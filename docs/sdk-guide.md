@@ -142,6 +142,12 @@ models = client.list_models(
 )
 ```
 
+### Get Model
+```python
+model = client.get_model("model-uuid")
+print(f"{model.model_id} — monitoring: {model.enabled_for_monitoring}")
+```
+
 ### Update Model
 Enable or disable models for specific tasks.
 ```python
@@ -187,6 +193,14 @@ history = client.get_uptime_history(
 )
 ```
 
+### Export Uptime History
+Download uptime data as JSON or CSV for external analysis.
+```python
+resp = client.export_uptime_history(format="csv", model_id="some-uuid")
+with open("uptime.csv", "wb") as f:
+    f.write(resp.content)
+```
+
 ## Benchmarks
 
 Run performance benchmarks across multiple models.
@@ -220,6 +234,14 @@ for res in results.results:
     print(f"  TPS: {res.tps}")
 ```
 
+### Export Benchmark
+Download benchmark results as JSON or CSV.
+```python
+resp = client.export_benchmark(benchmark.id, format="csv")
+with open("benchmark.csv", "wb") as f:
+    f.write(resp.content)
+```
+
 ## Alerts
 
 Manage alert rules and view triggered alerts.
@@ -249,26 +271,47 @@ for alert in alerts.items:
     client.acknowledge_alert(alert.id)
 ```
 
-## Export
-
-While the SDK provides direct access to all data via Python objects, you can also leverage the ArgusLM API's built-in export endpoints for CSV or JSON formats.
-
-### Exporting via SDK
-Since the SDK returns Pydantic models, you can easily export data to JSON or dictionaries:
-
+### Unread Count
+Get the number of unacknowledged alerts (useful for notification badges).
 ```python
-results = client.get_benchmark_results(run_id)
-# Export to JSON string
-json_data = results.model_dump_json(indent=2)
-# Export to dictionary
-dict_data = results.model_dump()
+unread = client.get_unread_alert_count()
+print(f"{unread.count} unread alerts")
 ```
 
-### API Export Endpoints
-The ArgusLM server provides dedicated endpoints for exporting data in CSV format, which can be accessed via standard HTTP requests:
+### Recent Alerts
+Get the most recent alerts for a notification dropdown.
+```python
+recent = client.get_recent_alerts(limit=5)
+for alert in recent.items:
+    print(f"{'🔴' if not alert.acknowledged else '⚪'} {alert.message}")
+print(f"Total unread: {recent.total_unread}")
+```
 
-- `GET /api/v1/benchmarks/{run_id}/export?format=csv`
-- `GET /api/v1/monitoring/uptime/export?format=csv`
+## Export
+
+The SDK supports two export approaches:
+
+### File Export (JSON/CSV)
+Use the dedicated export methods to download data files:
+```python
+# Export benchmark results as CSV
+resp = client.export_benchmark(run_id, format="csv")
+with open("benchmark.csv", "wb") as f:
+    f.write(resp.content)
+
+# Export uptime history as JSON
+resp = client.export_uptime_history(format="json", start_date="2025-01-01")
+with open("uptime.json", "wb") as f:
+    f.write(resp.content)
+```
+
+### Pydantic Model Serialization
+All other SDK methods return Pydantic models with built-in serialization:
+```python
+results = client.get_benchmark_results(run_id)
+json_data = results.model_dump_json(indent=2)
+dict_data = results.model_dump()
+```
 
 ## Error Handling
 

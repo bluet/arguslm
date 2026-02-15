@@ -374,6 +374,24 @@ List triggered alerts with optional filtering by rule or acknowledgment status.
 
 Mark an alert as acknowledged.
 
+### Unread Alert Count
+`GET /alerts/unread-count`
+
+Returns the number of unacknowledged alerts for notification badge display.
+
+**Response:** `{ "count": 3 }`
+
+### Recent Alerts
+`GET /alerts/recent`
+
+Returns the most recent alerts for notification dropdown.
+
+**Query Parameters:**
+- `limit` (int, default 10, max 50): Maximum alerts to return.
+
+**Response Format:**
+- `items` (array): Recent alert objects.
+- `total_unread` (int): Total unacknowledged count.
 
 ---
 
