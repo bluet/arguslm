@@ -1,5 +1,7 @@
 # ArgusLM — Open-Source LLM Monitoring & Benchmarking
 
+[![PyPI](https://img.shields.io/pypi/v/arguslm?style=flat-square)](https://pypi.org/project/arguslm/)
+[![CI](https://github.com/bluet/arguslm/actions/workflows/ci.yml/badge.svg)](https://github.com/bluet/arguslm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/bluet/arguslm?style=flat-square)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/bluet/arguslm?style=social)](https://github.com/bluet/arguslm/stargazers)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://www.python.org/downloads/)

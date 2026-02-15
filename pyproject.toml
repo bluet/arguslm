@@ -29,6 +29,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# WebSocket streaming support (for AsyncArgusLMClient.stream_benchmark)
+ws = [
+    "websockets>=12.0",
+]
 # Full server dependencies (what Docker/self-hosted deployment needs)
 server = [
     "fastapi>=0.109.0",

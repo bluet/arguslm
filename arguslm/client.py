@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json as _json
 import os
+from collections.abc import AsyncIterator
 from types import TracebackType
 from typing import Any
 from uuid import UUID
@@ -616,6 +618,39 @@ class AsyncArgusLMClient:
             f"/api/v1/benchmarks/{run_id}/export",
             params={"format": format},
         )
+
+    async def stream_benchmark(self, run_id: UUID | str) -> AsyncIterator[dict[str, Any]]:
+        """Stream live benchmark progress over WebSocket.
+
+        Yields parsed JSON messages from the server:
+        - ``{"type": "progress", "completed": N, "total": M, ...}``
+        - ``{"type": "result", "data": {...}}``
+        - ``{"type": "complete", "status": "completed"}``
+        - ``{"type": "error", "error": "...", "status": "failed"}``
+
+        Requires the ``websockets`` package (``pip install websockets``).
+        """
+        try:
+            from websockets.asyncio.client import connect
+        except ImportError as exc:
+            raise ImportError(
+                "websockets is required for stream_benchmark. "
+                "Install it with: pip install websockets"
+            ) from exc
+
+        ws_scheme = "wss" if self._base_url.startswith("https") else "ws"
+        http_stripped = self._base_url.replace("https://", "").replace("http://", "")
+        ws_url = f"{ws_scheme}://{http_stripped}/api/v1/benchmarks/{run_id}/stream"
+
+        async with connect(ws_url) as ws:
+            async for raw in ws:
+                msg = _json.loads(raw)
+                if msg.get("type") == "ping":
+                    await ws.send("pong")
+                    continue
+                yield msg
+                if msg.get("type") in ("complete", "error"):
+                    break
 
     # ------------------------------------------------------------------
     # Providers

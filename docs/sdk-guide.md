@@ -242,6 +242,20 @@ with open("benchmark.csv", "wb") as f:
     f.write(resp.content)
 ```
 
+### Stream Benchmark (WebSocket)
+Watch benchmark progress in real-time via the async client. Requires `pip install websockets`.
+```python
+async with AsyncArgusLMClient() as client:
+    benchmark = await client.start_benchmark(BenchmarkCreate(...))
+    async for msg in client.stream_benchmark(benchmark.id):
+        if msg["type"] == "progress":
+            print(f"Progress: {msg['completed']}/{msg['total']}")
+        elif msg["type"] == "result":
+            print(f"Result: {msg['data']['model_name']} — {msg['data']['ttft_ms']}ms")
+        elif msg["type"] == "complete":
+            print("Benchmark finished!")
+```
+
 ## Alerts
 
 Manage alert rules and view triggered alerts.
