@@ -7,13 +7,12 @@ name = "arguslm"
 version = "0.1.0"
 description = "ArgusLM — Open-source LLM monitoring & benchmarking SDK"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [{name = "Matthew Lien", email = "bluet@bluet.org"}]
 keywords = ["llm", "benchmark", "monitoring", "performance", "litellm", "openai", "anthropic", "sdk"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
