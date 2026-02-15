@@ -50,6 +50,8 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.8.0",
     "httpx>=0.26.0",
+    "aiosqlite>=0.20.0",
+    "greenlet>=3.0.0",
 ]
 
 [project.urls]
