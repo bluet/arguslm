@@ -1,5 +1,6 @@
 services:
   backend:
+    image: bluet/arguslm:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -29,6 +30,7 @@ services:
       - arguslm-network
 
   frontend:
+    image: bluet/arguslm-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile

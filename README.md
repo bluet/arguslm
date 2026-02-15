@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/bluet/arguslm?style=flat-square)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/bluet/arguslm?style=social)](https://github.com/bluet/arguslm/stargazers)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square)](docker-compose.yml)
+[![Docker Hub](https://img.shields.io/docker/v/bluet/arguslm?label=docker&style=flat-square)](https://hub.docker.com/r/bluet/arguslm)
 
 > Know exactly which LLM providers are up, which are fastest,
 > and which are degrading — before your users notice.
