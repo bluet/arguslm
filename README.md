@@ -260,10 +260,13 @@ pip install arguslm[server]
 
 ## Documentation
 
+- [Architecture Overview](docs/architecture.md)
+- [Python SDK Guide](docs/sdk-guide.md)
+- [REST API Reference](docs/api-reference.md)
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Comparison with Alternatives](docs/comparison.md)
-- [API Reference](http://localhost:8000/docs)
+- [Interactive API Docs](http://localhost:8000/docs) (Swagger UI, available when server is running)
 
 ---
 
