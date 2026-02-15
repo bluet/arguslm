@@ -8,6 +8,7 @@ import importlib
 import time
 import uuid
 from typing import Any, AsyncIterator, cast
+from unittest.mock import patch
 
 pytest = importlib.import_module("pytest")
 
@@ -15,6 +16,15 @@ from arguslm.server.core import benchmark_engine
 from arguslm.server.core.benchmark_engine import BenchmarkConfig, BenchmarkResult
 from arguslm.server.models.model import Model
 from arguslm.server.models.provider import ProviderAccount
+
+
+@pytest.fixture(autouse=True)
+def _mock_credentials():
+    with patch(
+        "arguslm.server.models.provider.decrypt_credentials",
+        return_value={"api_key": "test-key"},
+    ):
+        yield
 
 
 def _make_model(index: int, provider_type: str = "openai") -> Model:
@@ -108,7 +118,8 @@ async def test_warmup_runs_excluded(monkeypatch: Any) -> None:
     monkeypatch.setattr(benchmark_engine, "benchmark_single_model", fake_benchmark_single_model)
 
     results = await benchmark_engine.run_benchmark(config)
-    assert len(results) == len(models) * (config.num_runs - config.warmup_runs)
+    # warmup_runs are additional runs on top of num_runs, only num_runs are returned
+    assert len(results) == len(models) * config.num_runs
 
 
 def test_calculate_statistics() -> None:
@@ -121,52 +132,50 @@ def test_calculate_statistics() -> None:
 
 
 @pytest.mark.asyncio
-async def test_throttling_limits_respected(monkeypatch: Any) -> None:
+async def test_throttling_limits_respected() -> None:
     model = _make_model(0, provider_type="openai")
     semaphores = {
         "global": asyncio.Semaphore(2),
         "provider": {"openai": asyncio.Semaphore(1)},
         "model": {str(model.id): asyncio.Semaphore(1)},
     }
-    active = 0
-    max_active = 0
+    state = {"active": 0, "max_active": 0}
     lock = asyncio.Lock()
 
     async def stream_generator() -> AsyncIterator[dict[str, Any]]:
-        nonlocal active, max_active
         async with lock:
-            active += 1
-            max_active = max(max_active, active)
+            state["active"] += 1
+            state["max_active"] = max(state["max_active"], state["active"])
         try:
             await asyncio.sleep(0.05)
             yield {"choices": [{"delta": {"content": "x"}}]}
         finally:
             async with lock:
-                active -= 1
+                state["active"] -= 1
 
     async def fake_complete_stream(self: object, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
         _ = kwargs
         async for chunk in stream_generator():
             yield chunk
 
-    benchmark_engine_any = cast(Any, benchmark_engine)
-    monkeypatch.setattr(benchmark_engine_any.LiteLLMClient, "complete_stream", fake_complete_stream)
+    with patch.object(benchmark_engine.LiteLLMClient, "complete_stream", fake_complete_stream):
+        run_id = uuid.uuid4()
+        tasks = [
+            benchmark_engine.benchmark_single_model(
+                model=model,
+                prompt_pack="health_check",
+                max_tokens=5,
+                semaphores=semaphores,
+                is_warmup=False,
+                run_id=run_id,
+            )
+            for _ in range(3)
+        ]
 
-    run_id = uuid.uuid4()
-    tasks = [
-        benchmark_engine.benchmark_single_model(
-            model=model,
-            prompt_pack="pack",
-            max_tokens=5,
-            semaphores=semaphores,
-            is_warmup=False,
-            run_id=run_id,
-        )
-        for _ in range(3)
-    ]
-
-    await asyncio.gather(*tasks)
-    assert max_active == 1
+        results = await asyncio.gather(*tasks)
+        for r in results:
+            assert r.error is None, f"benchmark_single_model failed: {r.error}"
+        assert state["max_active"] == 1
 
 
 @pytest.mark.asyncio
