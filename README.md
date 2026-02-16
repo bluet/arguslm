@@ -68,7 +68,7 @@ docker compose up -d
 | Benchmarking | Parallel multi-model testing with deep metrics for TTFT, TPS, and total latency. |
 | Visualization | Live performance charts, historical trends, and side-by-side model comparisons. |
 | Alerting | Proactive downtime detection and performance degradation notifications. |
-| Integration | 16 tested providers (OpenAI, Anthropic, Ollama, etc.) plus additional providers via LiteLLM. |
+| Integration | 90+ providers via LiteLLM (16 tested, all others auto-discovered from LiteLLM catalog). |
 
 ---
 
@@ -97,7 +97,7 @@ ArgusLM is built for scale and reliability, leveraging a modern asynchronous sta
               ┌──────────────────────────────────────────────────┐
               │                  LLM Providers                   │
               │  OpenAI │ Anthropic │ Bedrock │ Vertex │ Azure   │
-              │  Ollama │ LM Studio │ xAI │ DeepSeek │ more     │
+              │  Ollama │ LM Studio │ xAI │ DeepSeek │ 90+      │
               └──────────────────────────────────────────────────┘
 ```
 

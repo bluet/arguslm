@@ -98,15 +98,15 @@ These undermine credibility for an open-source project trying to earn trust.
 
 ## High-Impact Improvements (Ranked by User Value)
 
-### 1. Scheduled Benchmarks
+### 1. Scheduled Benchmarks (Low Priority)
 
-Right now benchmarks are manual-trigger only. But the whole product pitch is "know before your users do." If benchmarking is manual, you only know things when you remember to check.
+Benchmarks are manual-trigger only. Monitoring already handles scheduled health checks (TTFT, TPS, latency, uptime) on a configurable interval. Scheduled benchmarks would be for periodic comparative analysis across models — a different use case from ongoing monitoring.
 
-**Add:** A "Run benchmark every X hours" option, reusing the same APScheduler infrastructure. This is ~50 lines of code — you already have the pattern in `scheduler.py`.
+**Note:** The "know before your users do" promise is fulfilled by the monitoring scheduler, not benchmarks. Scheduled benchmarks would be a nice-to-have for periodic model comparison reports.
 
-**Validation status:** `[x] CONFIRMED`
-- `scheduler.py` only has `MONITORING_JOB_ID = "uptime_monitoring"` — no benchmark job.
-- `benchmarks.py` only accepts `POST /api/v1/benchmarks` for manual trigger — no schedule config.
+**Validation status:** `[x] CONFIRMED — monitoring handles scheduled checks, benchmarks are manual`
+- `scheduler.py` has `MONITORING_JOB_ID = "uptime_monitoring"` — handles scheduled probing
+- Benchmarks are for manual comparative analysis via `POST /api/v1/benchmarks`
 
 ---
 
@@ -123,15 +123,14 @@ When a user adds a provider, the natural expectation is "now I see my models." I
 
 ---
 
-### 3. Smarter Defaults for New Models
+### 3. Model Defaults — OFF is Intentional
 
-Discovered models default to `enabled_for_monitoring=False`. This means after adding a provider and refreshing models, the user has to individually enable every model they want monitored. For someone with 20+ models across providers, this is tedious.
+Discovered models default to `enabled_for_monitoring=False`. This is the **correct design choice** — defaulting to ON would create request storms and burn API tokens when a provider with hundreds of models is added. The "Enable All" bulk action exists in the frontend for users who want to opt in.
 
-**Better default:** `enabled_for_monitoring=True` for discovered models, or at minimum provide an "Enable All" bulk action (which exists in the frontend but requires per-provider clicking).
-
-**Validation status:** `[x] CONFIRMED`
-- `arguslm/server/models/model.py` line 39: `enabled_for_monitoring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)`
-- Manual model creation (`create_manual_model` line 82-93) doesn't set `enabled_for_monitoring` explicitly, inheriting the `False` default.
+**Status:** `[x] CONFIRMED — current default is correct`
+- `arguslm/server/models/model.py` line 39: `enabled_for_monitoring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)` — **intentional** to prevent token burning
+- Frontend provides "Enable All" / "Disable All" bulk actions per provider on Monitoring page
+- Manual model creation also defaults to OFF, consistent with the safety-first approach
 
 ---
 
@@ -177,12 +176,12 @@ Stop comparing to Datadog (different universe). Compare to "what happens when yo
 
 1. **Duplicate heading:** `## Quick Start` appears twice (lines 44 and 46)
 2. **"Both (probing + tracing)"** in comparison table — ArgusLM does probing, not request tracing. This claim is misleading. Tracing means intercepting your app's real requests. ArgusLM does synthetic probes.
-3. **"100+ providers"** — technically true via LiteLLM, but ArgusLM supports 16 provider types. The "100+" refers to model variants, not distinct providers.
+3. ~~**"100+ providers"**~~ **CORRECTION (2026-02-16):** The Add Provider dropdown shows 92 provider types (16 tested + 76 auto-discovered from LiteLLM catalog). The "100+" claim was close to accurate — updated to "90+ providers" for precision.
 
 **Validation status:** `[x] CONFIRMED`
-- Line 25: `Both (probing + tracing)` — **misleading.** ArgusLM does synthetic probing only. It does NOT intercept/trace real application requests (which is what "tracing" means in observability). The synthetic probes generate their own requests.
-- Line 73: `100+ providers via LiteLLM abstraction` — **slightly misleading.** ArgusLM supports 16 provider *types*. LiteLLM supports 100+ model *variants* across those providers. "100+ providers" implies 100 distinct integrations.
-- Lines 44+46: Duplicate `## Quick Start` heading — **confirmed.**
+- Line 25: `Both (probing + tracing)` — **misleading.** ArgusLM does synthetic probing only. Fixed to "Synthetic probing."
+- Line 73: `100+ providers` — **CORRECTED:** Playwright verification shows 92 provider types in Add Provider dropdown. Updated to "90+ providers via LiteLLM."
+- Lines 44+46: Duplicate `## Quick Start` heading — **fixed.**
 
 ---
 
@@ -193,9 +192,9 @@ Stop comparing to Datadog (different universe). Compare to "what happens when yo
 | **P0** | First-run onboarding wizard | Without it, 80% of users bounce at empty dashboard |
 | **P0** | Working webhook notifications | "Know before your users" is the tagline — but alerts don't leave the app |
 | **P0** | Fix stale docs/version numbers | Credibility for OSS trust |
-| **P1** | Scheduled benchmarks | Completes the "automated" story |
 | **P1** | Auto-discovery on provider add (backend API) | Frontend does this; backend API needs it too |
-| **P1** | Authentication / API keys | No auth = can't deploy beyond localhost safely |
+| **P2** | Scheduled benchmarks | Nice-to-have for periodic model comparison (monitoring handles scheduled probes) |
+| **P2** | Authentication / API keys | Acceptable for local deployment; add if requested via GitHub issues |
 | **P2** | Prometheus metrics export | Enterprise adoption path |
 | **P2** | Data retention policies | Self-hosted tools must manage disk space |
 | **P2** | Cost tracking per probe | Users want to know how much monitoring costs them in API credits |
@@ -237,32 +236,34 @@ But the product isn't delivering on its own promise yet. The tagline is "know be
 - `[x]` `config.py` line 30: `api_version: str = "0.1.0"` — stale
 - `[x]` `README.md` lines 44+46: duplicate `## Quick Start` — confirmed
 
-### Improvement 1: Scheduled Benchmarks — CONFIRMED MISSING
-- `[x]` scheduler.py only has `MONITORING_JOB_ID = "uptime_monitoring"` — no benchmark scheduling
-- `[x]` Benchmarks only via `POST /api/v1/benchmarks` — manual trigger
+### Improvement 1: Scheduled Benchmarks — Low Priority (Monitoring handles scheduled probing)
+- `[x]` scheduler.py has `MONITORING_JOB_ID = "uptime_monitoring"` — handles automated health checks
+- `[x]` Benchmarks are for manual comparative analysis via `POST /api/v1/benchmarks`
+- `[x]` The "automated monitoring" promise is fulfilled by the monitoring scheduler, not benchmarks
 
 ### Improvement 2: Auto-Discovery — PARTIALLY CONFIRMED (backend-only gap)
 - `[x]` `create_provider` endpoint (providers.py lines 40-88) does not call `refresh_provider_models`
 - `[x]` Discovery is a separate `POST /{provider_id}/refresh-models` requiring explicit user action
 - `[x]` **CORRECTION:** Frontend `ProvidersPage.tsx` `createMutation.onSuccess` auto-calls `refreshModels()` — dashboard users get auto-discovery. Backend API-only users must call refresh separately.
 
-### Improvement 3: Model Defaults — CONFIRMED
-- `[x]` `model.py` line 39: `enabled_for_monitoring` defaults to `False`
-- `[x]` `create_manual_model` (line 82-93) also defaults to monitoring OFF
+### Improvement 3: Model Defaults — OFF is Correct (Intentional)
+- `[x]` `model.py` line 39: `enabled_for_monitoring` defaults to `False` — **intentional** to prevent token burning/request storms
+- `[x]` `create_manual_model` (line 82-93) also defaults to monitoring OFF — consistent safety-first design
+- `[x]` Frontend provides "Enable All" / "Disable All" bulk actions for user opt-in
 
 ### Improvement 4: Data Retention — CONFIRMED MISSING
 - `[x]` grep `retention|cleanup|purge|delete.*older|ttl` — **zero matches** in application code
 - `[x]` No scheduler jobs for cleanup exist
 
-### Improvement 5: Auth/API Keys — CONFIRMED MISSING
+### Improvement 5: Auth/API Keys — Not Currently Needed
 - `[x]` Only middleware is CORS (`main.py` line 27: `CORSMiddleware`)
-- `[x]` No auth middleware, no API key validation, no session management on API endpoints
-- `[x]` grep `authenticate|Authorization` in server code — only hits provider credential handling (for outbound LLM calls), not inbound ArgusLM API auth
+- `[x]` No auth middleware — **acceptable for current local/private deployment model**
+- `[x]` Can be added later if requested via GitHub issues for non-localhost deployments
 
-### README Issues — ALL CONFIRMED
-- `[x]` Lines 44+46: Duplicate `## Quick Start` heading
-- `[x]` Line 25: `Both (probing + tracing)` — misleading (ArgusLM does probing, not app-level tracing)
-- `[x]` Line 73: `100+ providers via LiteLLM` — 16 provider types, "100+" refers to model variants
+### README Issues — ALL CONFIRMED AND FIXED
+- `[x]` Lines 44+46: Duplicate `## Quick Start` heading — **fixed**
+- `[x]` Line 25: `Both (probing + tracing)` → "Synthetic probing" — **fixed**
+- `[x]` Line 73: `100+ providers` → "90+ providers" — **corrected** (Playwright verification: 92 provider types in Add Provider dropdown, 16 tested + 76 from LiteLLM catalog)
 
 ### Additional Discoveries During Validation
 - `[x]` **No alert rule management UI in frontend** — The entire alert rule CRUD (create/edit/delete rules) is API-only. Users can only view/acknowledge alerts via the notification bell. This is a significant UX gap.
