@@ -116,9 +116,10 @@ When a user adds a provider, the natural expectation is "now I see my models." I
 
 **Fix:** Auto-trigger model discovery after successful provider creation + connection test. One user action, not two.
 
-**Validation status:** `[x] CONFIRMED`
+**Validation status:** `[x] PARTIALLY CONFIRMED — backend-only gap`
 - `providers.py` `create_provider` endpoint (line 40-88) creates the provider and returns. No call to `refresh_provider_models`.
 - `refresh_provider_models` is a separate endpoint at line 436: `POST /{provider_id}/refresh-models`.
+- **CORRECTION (2026-02-16):** The **frontend** `ProvidersPage.tsx` (lines 114-120) auto-calls `refreshModels(newProvider.id)` in `createMutation.onSuccess` handler. So auto-discovery IS implemented at the UI layer — users adding providers via the dashboard DO get models auto-refreshed. The gap is backend-only (API-only users must call refresh separately).
 
 ---
 
@@ -193,7 +194,7 @@ Stop comparing to Datadog (different universe). Compare to "what happens when yo
 | **P0** | Working webhook notifications | "Know before your users" is the tagline — but alerts don't leave the app |
 | **P0** | Fix stale docs/version numbers | Credibility for OSS trust |
 | **P1** | Scheduled benchmarks | Completes the "automated" story |
-| **P1** | Auto-discovery on provider add | Reduces setup friction by 1 step |
+| **P1** | Auto-discovery on provider add (backend API) | Frontend does this; backend API needs it too |
 | **P1** | Authentication / API keys | No auth = can't deploy beyond localhost safely |
 | **P2** | Prometheus metrics export | Enterprise adoption path |
 | **P2** | Data retention policies | Self-hosted tools must manage disk space |
@@ -240,9 +241,10 @@ But the product isn't delivering on its own promise yet. The tagline is "know be
 - `[x]` scheduler.py only has `MONITORING_JOB_ID = "uptime_monitoring"` — no benchmark scheduling
 - `[x]` Benchmarks only via `POST /api/v1/benchmarks` — manual trigger
 
-### Improvement 2: Auto-Discovery — CONFIRMED MISSING
+### Improvement 2: Auto-Discovery — PARTIALLY CONFIRMED (backend-only gap)
 - `[x]` `create_provider` endpoint (providers.py lines 40-88) does not call `refresh_provider_models`
 - `[x]` Discovery is a separate `POST /{provider_id}/refresh-models` requiring explicit user action
+- `[x]` **CORRECTION:** Frontend `ProvidersPage.tsx` `createMutation.onSuccess` auto-calls `refreshModels()` — dashboard users get auto-discovery. Backend API-only users must call refresh separately.
 
 ### Improvement 3: Model Defaults — CONFIRMED
 - `[x]` `model.py` line 39: `enabled_for_monitoring` defaults to `False`

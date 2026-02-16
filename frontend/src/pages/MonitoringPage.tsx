@@ -85,17 +85,28 @@ const MonitoringPage: React.FC = () => {
   }, [config?.enabled]);
 
   // Handlers
-  const handleSaveConfig = async () => {
+  const handleSaveConfig = async (overrides?: Partial<typeof formConfig>) => {
     setSaving(true);
     try {
-      const updated = await updateConfig(formConfig);
+      const payload = overrides ? { ...formConfig, ...overrides } : formConfig;
+      const updated = await updateConfig(payload);
       setConfig(updated);
-      // Show success message or toast here if available
+      setFormConfig({
+        enabled: updated.enabled,
+        interval_minutes: updated.interval_minutes,
+        prompt_pack: updated.prompt_pack,
+      });
     } catch (error) {
       console.error('Failed to update config:', error);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleToggleEnabled = () => {
+    const newEnabled = !formConfig.enabled;
+    setFormConfig(prev => ({ ...prev, enabled: newEnabled }));
+    handleSaveConfig({ enabled: newEnabled });
   };
 
   const handleRunNow = async () => {
@@ -219,8 +230,9 @@ const MonitoringPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monitoring Status</label>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setFormConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                onClick={handleToggleEnabled}
+                disabled={saving}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
                   formConfig.enabled ? 'bg-green-500 dark:bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
                 }`}
               >
@@ -268,7 +280,7 @@ const MonitoringPage: React.FC = () => {
 
           <div className="flex gap-3">
             <button
-              onClick={handleSaveConfig}
+              onClick={() => handleSaveConfig()}
               disabled={saving}
               className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
             >

@@ -22,7 +22,7 @@ Modern AI architectures use dozens of LLM providers across services — OpenAI, 
 |--------|-------------------|-----------|---------------|-------------|
 | Deployment | SaaS-only | Self-hosted | SaaS-only | Self-hosted |
 | Local Models | ❌ No | ❌ No | ❌ No | ✅ Ollama, LM Studio, local APIs |
-| Probing vs Tracing | Tracing only | Infrastructure only | Probing only | Both (probing + tracing) |
+| Probing vs Tracing | Tracing only | Infrastructure only | Probing only | Synthetic probing |
 | Metrics | Request-level | Node-level | Response time | TTFT, TPS, latency, uptime |
 | Pricing | $$$$ | Free | $$$ | ✅ Free & Open-Source |
 | Extensible | Limited | Limited | No | ✅ Full Python SDK + HTTP API |
@@ -40,8 +40,6 @@ Modern AI architectures use dozens of LLM providers across services — OpenAI, 
 - **You must keep costs private** — Self-hosted, no SaaS lock-in, full control over your observability data.
 
 ---
-
-## Quick Start
 
 ## Quick Start
 
@@ -70,7 +68,7 @@ docker compose up -d
 | Benchmarking | Parallel multi-model testing with deep metrics for TTFT, TPS, and total latency. |
 | Visualization | Live performance charts, historical trends, and side-by-side model comparisons. |
 | Alerting | Proactive downtime detection and performance degradation notifications. |
-| Integration | Native support for 100+ providers via LiteLLM abstraction. |
+| Integration | 16 tested providers (OpenAI, Anthropic, Ollama, etc.) plus additional providers via LiteLLM. |
 
 ---
 
@@ -99,7 +97,7 @@ ArgusLM is built for scale and reliability, leveraging a modern asynchronous sta
               ┌──────────────────────────────────────────────────┐
               │                  LLM Providers                   │
               │  OpenAI │ Anthropic │ Bedrock │ Vertex │ Azure   │
-              │  Ollama │ LM Studio │ xAI │ DeepSeek │ 100+     │
+              │  Ollama │ LM Studio │ xAI │ DeepSeek │ more     │
               └──────────────────────────────────────────────────┘
 ```
 

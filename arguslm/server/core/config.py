@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # API
     api_title: str = "ArgusLM API"
-    api_version: str = "0.1.0"
+    api_version: str = "0.2.0"
     api_prefix: str = "/api/v1"
 
     # CORS

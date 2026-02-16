@@ -19,10 +19,10 @@ Most monitoring tools fall into three categories:
 2. **Request tracing** (Langfuse, Helicone) — tracks LLM requests from your application, but requires code instrumentation
 3. **Synthetic probing** — actively tests endpoints with real requests
 
-**ArgusLM does all three**:
-- Infrastructure monitoring: uptime, availability trend analysis
-- Request tracing: track all synthetic probes with full request/response logging
+**ArgusLM focuses on synthetic probing** with infrastructure-level insights:
 - **Synthetic probing**: actively sends real prompts to LLM providers to measure TTFT, TPS, and latency
+- Infrastructure monitoring: uptime tracking, availability trend analysis from probe results
+- Probe logging: full request/response logging of all synthetic probes for debugging
 
 ## Comparison by Capability
 
@@ -94,7 +94,7 @@ docker compose up -d
 - You need automated uptime monitoring for hundreds of LLM endpoints
 - Budget is a concern (free and open-source)
 - You value data ownership self-hosted on your infrastructure
-- You need HTTP API for automation in CI/CD pipelines (Python SDK for job extension is planned)
+- You need HTTP API or Python SDK for automation in CI/CD pipelines
 
 ### Choose Datadog if:
 
@@ -137,9 +137,9 @@ Suppose you run a RAG application with:
 
 This shows how tools complement each other rather than compete. Use ArgusLM for LLM-specific synthetic probing, Langfuse for request tracing, Prometheus for infrastructure metrics.
 
-## Using ArgusLM: HTTP API Today, Python SDK Soon
+## Using ArgusLM: HTTP API and Python SDK
 
-**Current release (HTTP API)**:
+**HTTP API**:
 ```bash
 # Trigger monitoring run
 curl -X POST http://localhost:8000/api/v1/monitoring/run
@@ -153,15 +153,27 @@ curl -X POST http://localhost:8000/api/v1/benchmarks \
   -d '{"model_ids": ["uuid-1", "uuid-2"], "num_runs": 5}'
 ```
 
-**Python SDK (planned)**: Designed for custom `MonitoringJob` and `BenchmarkSuite` extension so you can:
-- Define custom alerting rules (`should_alert(metrics)`)
-- Write custom prompt templates for benchmarks
-- Load custom test cases
-- Integrate with your CI/CD pipelines
+**Python SDK** (`pip install arguslm`):
+```python
+from arguslm import ArgusLMClient
+
+with ArgusLMClient(base_url="http://localhost:8000") as client:
+    # Trigger monitoring run
+    client.trigger_monitoring_run()
+
+    # Get uptime history
+    uptime = client.get_uptime_history(limit=10)
+
+    # Start benchmark
+    from arguslm.schemas import BenchmarkCreate
+    benchmark = client.start_benchmark(BenchmarkCreate(
+        model_ids=["uuid-1", "uuid-2"], num_runs=5
+    ))
+```
 
 **When to use which**:
-- HTTP API: Start immediately — query metrics, trigger jobs, poll for results
-- Python SDK: Custom automation when released (no code changes needed to use HTTP API)
+- HTTP API: Quick integration, shell scripts, curl-based workflows
+- Python SDK: CI/CD pipelines, custom automation, programmatic access with type safety
 
 ## Cost Impact
 

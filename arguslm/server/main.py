@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     await stop_scheduler()
 
 
-app = FastAPI(title="LLM Performance Monitor", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="ArgusLM API", version="0.2.0", lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
