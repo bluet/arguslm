@@ -1,5 +1,5 @@
 # Stage 1: Builder - includes dev dependencies for building
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 RUN pytest tests/ --tb=short || true
 
 # Stage 2: Runtime - production image with only runtime dependencies
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
