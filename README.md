@@ -6,6 +6,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/bluet/arguslm?style=social)](https://github.com/bluet/arguslm/stargazers)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://www.python.org/downloads/)
 [![Docker Hub](https://img.shields.io/docker/v/bluet/arguslm?label=docker&style=flat-square)](https://hub.docker.com/r/bluet/arguslm)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbluet%2Farguslm.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbluet%2Farguslm?ref=badge_shield)
 
 > Know exactly which LLM providers are up, which are fastest,
 > and which are degrading — before your users notice.
@@ -292,3 +293,5 @@ ArgusLM is released under the [Apache License 2.0](LICENSE).
 ---
 
 *Named after Argus Panoptes, the all-seeing giant of Greek mythology.*
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbluet%2Farguslm.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbluet%2Farguslm?ref=badge_large)
