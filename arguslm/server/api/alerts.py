@@ -1,7 +1,6 @@
 """Alert Rules API endpoints."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -153,9 +152,9 @@ async def delete_alert_rule(
 
 @router.get("", response_model=AlertListResponse)
 async def list_alerts(
-    rule_id: Optional[UUID] = Query(None, description="Filter by rule ID"),
-    acknowledged: Optional[bool] = Query(None, description="Filter by acknowledgment status"),
-    since: Optional[datetime] = Query(None, description="Filter alerts since this datetime"),
+    rule_id: UUID | None = Query(None, description="Filter by rule ID"),
+    acknowledged: bool | None = Query(None, description="Filter by acknowledgment status"),
+    since: datetime | None = Query(None, description="Filter alerts since this datetime"),
     limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_db),
@@ -186,7 +185,7 @@ async def list_alerts(
         conditions.append(Alert.created_at >= since)
 
     # Get total unacknowledged count
-    unack_stmt = select(Alert).where(Alert.acknowledged == False)
+    unack_stmt = select(Alert).where(Alert.acknowledged.is_(False))
     unack_result = await db.execute(unack_stmt)
     unacknowledged_count = len(unack_result.scalars().all())
 
@@ -219,7 +218,7 @@ async def get_unread_count(db: AsyncSession = Depends(get_db)) -> UnreadCountRes
     Returns:
         Count of unacknowledged alerts.
     """
-    stmt = select(Alert).where(Alert.acknowledged == False)
+    stmt = select(Alert).where(Alert.acknowledged.is_(False))
     result = await db.execute(stmt)
     count = len(result.scalars().all())
     return UnreadCountResponse(count=count)
@@ -248,7 +247,7 @@ async def get_recent_alerts(
     alerts = result.scalars().all()
 
     # Get total unread count
-    unread_stmt = select(Alert).where(Alert.acknowledged == False)
+    unread_stmt = select(Alert).where(Alert.acknowledged.is_(False))
     unread_result = await db.execute(unread_stmt)
     total_unread = len(unread_result.scalars().all())
 

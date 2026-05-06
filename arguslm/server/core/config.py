@@ -1,6 +1,5 @@
 """Application configuration settings."""
 
-import os
 from functools import lru_cache
 
 from pydantic import field_validator
@@ -37,11 +36,12 @@ class Settings(BaseSettings):
     @classmethod
     def validate_encryption_key(cls, v: str) -> str:
         """Validate ENCRYPTION_KEY is set and is a valid Fernet key."""
+        gen_hint = (
+            "python -c 'from cryptography.fernet import Fernet; "
+            "print(Fernet.generate_key().decode())'"
+        )
         if not v:
-            raise ValueError(
-                "ENCRYPTION_KEY is required. Generate with: "
-                "python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
-            )
+            raise ValueError(f"ENCRYPTION_KEY is required. Generate with: {gen_hint}")
         try:
             from cryptography.fernet import Fernet
 
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
         except Exception:
             raise ValueError(
                 "ENCRYPTION_KEY is invalid. Must be a valid Fernet key (44 chars, base64). "
-                "Generate with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+                f"Generate with: {gen_hint}"
             )
         return v
 

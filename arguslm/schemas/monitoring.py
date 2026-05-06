@@ -1,7 +1,6 @@
 """Pydantic schemas for Monitoring API endpoints."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -14,7 +13,7 @@ class MonitoringConfigResponse(BaseModel):
     interval_minutes: int = Field(..., ge=1, description="Monitoring interval in minutes")
     prompt_pack: str = Field(..., description="Prompt pack to use for checks")
     enabled: bool = Field(..., description="Whether monitoring is enabled")
-    last_run_at: Optional[datetime] = Field(None, description="Last monitoring run timestamp")
+    last_run_at: datetime | None = Field(None, description="Last monitoring run timestamp")
     created_at: datetime = Field(..., description="Creation timestamp")
 
     model_config = ConfigDict(from_attributes=True)
@@ -23,18 +22,18 @@ class MonitoringConfigResponse(BaseModel):
 class MonitoringConfigUpdate(BaseModel):
     """Schema for updating the global monitoring configuration."""
 
-    interval_minutes: Optional[int] = Field(
+    interval_minutes: int | None = Field(
         None,
         ge=1,
         description="How often to run health checks (in minutes)",
         examples=[15],
     )
-    prompt_pack: Optional[str] = Field(
+    prompt_pack: str | None = Field(
         None,
         description="The prompt pack to use for health checks",
         examples=["shakespeare"],
     )
-    enabled: Optional[bool] = Field(
+    enabled: bool | None = Field(
         None,
         description="Whether automated monitoring is globally enabled",
         examples=[True],
@@ -55,13 +54,13 @@ class UptimeCheckResponse(BaseModel):
     id: UUID = Field(..., description="Check ID")
     model_id: UUID = Field(..., description="Model ID")
     model_name: str = Field(..., description="Model display name")
-    provider_type: Optional[str] = Field(None, description="Provider type (e.g. openai, lmstudio)")
+    provider_type: str | None = Field(None, description="Provider type (e.g. openai, lmstudio)")
     status: str = Field(..., description="Check status (up, down, degraded)")
-    latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
-    ttft_ms: Optional[float] = Field(None, description="Time to first token in milliseconds")
-    tps: Optional[float] = Field(None, description="Tokens per second throughput")
-    output_tokens: Optional[int] = Field(None, description="Number of tokens generated")
-    error: Optional[str] = Field(None, description="Error message if check failed")
+    latency_ms: float | None = Field(None, description="Response latency in milliseconds")
+    ttft_ms: float | None = Field(None, description="Time to first token in milliseconds")
+    tps: float | None = Field(None, description="Tokens per second throughput")
+    output_tokens: int | None = Field(None, description="Number of tokens generated")
+    error: str | None = Field(None, description="Error message if check failed")
     created_at: datetime = Field(..., description="Check timestamp")
 
     model_config = ConfigDict(from_attributes=True)

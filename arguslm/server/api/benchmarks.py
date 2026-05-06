@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from fastapi import (
@@ -42,7 +42,7 @@ from arguslm.server.models.benchmark import BenchmarkResult, BenchmarkRun
 from arguslm.server.models.model import Model
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    pass
 
 router = APIRouter(prefix="/api/v1/benchmarks", tags=["benchmarks"])
 
@@ -137,7 +137,7 @@ async def _run_benchmark_task(
 
             # Update run status to completed
             run.status = "completed"
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.now(UTC)
             await db.commit()
 
             # Broadcast completion
@@ -150,7 +150,7 @@ async def _run_benchmark_task(
                 run = result.scalar_one_or_none()
                 if run:
                     run.status = "failed"
-                    run.completed_at = datetime.now(timezone.utc)
+                    run.completed_at = datetime.now(UTC)
                     await db.commit()
             except Exception:
                 pass
@@ -226,16 +226,14 @@ async def create_benchmark(
         )
 
     # Create benchmark run record
-    run_name = (
-        benchmark.name or f"Benchmark {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}"
-    )
+    run_name = benchmark.name or f"Benchmark {datetime.now(UTC).strftime('%Y-%m-%d %H:%M')}"
     run = BenchmarkRun(
         name=run_name,
         model_ids=[str(mid) for mid in benchmark.model_ids],
         prompt_pack=benchmark.prompt_pack,
         status="pending",
         triggered_by="user",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         completed_at=None,
     )
     db.add(run)
@@ -566,7 +564,7 @@ async def stream_benchmark(
                 # Echo pings as pongs
                 if data == "ping":
                     await websocket.send_text("pong")
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Send keep-alive ping
                 try:
                     await websocket.send_json({"type": "ping"})

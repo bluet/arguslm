@@ -38,9 +38,9 @@ class BedrockModelSource:
             credentials = account.credentials
             region = credentials.get("region", DEFAULT_REGION)
 
-            # Bedrock supports bearer token auth (from AWS console) or IAM credentials
-            # ArgusLM stores bearer token in api_key field
-            api_key = credentials.get("api_key", "")
+            # boto3 requires IAM credentials, not bearer tokens — bearer tokens
+            # stored in `api_key` are unused here. For bearer auth, users must
+            # configure AWS CLI credentials.
 
             # Create boto3 client with timeout configuration
             config = Config(

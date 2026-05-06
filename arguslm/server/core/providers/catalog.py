@@ -1,7 +1,6 @@
 """Provider catalog - single source of truth for all provider configuration."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from litellm.constants import LITELLM_CHAT_PROVIDERS
 
@@ -17,9 +16,9 @@ class ProviderSpec:
     requires_base_url: bool = False
     requires_region: bool = False
     show_org_fields: bool = False
-    default_base_url: Optional[str] = None
-    api_key_label: Optional[str] = None
-    base_url_label: Optional[str] = None
+    default_base_url: str | None = None
+    api_key_label: str | None = None
+    base_url_label: str | None = None
     region_options: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
 

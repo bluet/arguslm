@@ -11,6 +11,7 @@ from typing import Any
 
 from arguslm.server.core.litellm_client import LiteLLMClient
 from arguslm.server.core.prompt_packs import get_prompt
+from arguslm.server.core.providers import get_litellm_model_name as _catalog_get_model_name
 from arguslm.server.models.benchmark import BenchmarkResult
 from arguslm.server.models.model import Model
 
@@ -35,9 +36,6 @@ def _get_provider_key(model: Model) -> str:
     provider_account = getattr(model, "provider_account", None)
     provider_type = getattr(provider_account, "provider_type", None)
     return provider_type or "unknown"
-
-
-from arguslm.server.core.providers import get_litellm_model_name as _catalog_get_model_name
 
 
 def _get_litellm_model_name(model: Model) -> str:

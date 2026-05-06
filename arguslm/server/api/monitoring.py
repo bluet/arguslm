@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, desc, func, select
@@ -111,7 +110,7 @@ async def run_uptime_checks_task() -> None:
 
             stmt = (
                 select(Model)
-                .where(Model.enabled_for_monitoring == True)
+                .where(Model.enabled_for_monitoring.is_(True))
                 .options(selectinload(Model.provider_account))
             )
             result = await db.execute(stmt)
@@ -154,9 +153,9 @@ async def trigger_monitoring_run(
 
 @router.get("/uptime", response_model=UptimeHistoryResponse)
 async def get_uptime_history(
-    model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
-    status: Optional[str] = Query(None, description="Filter by status (up, down, degraded)"),
-    since: Optional[datetime] = Query(None, description="Filter by created_at >= since"),
+    model_id: uuid.UUID | None = Query(None, description="Filter by model ID"),
+    status: str | None = Query(None, description="Filter by status (up, down, degraded)"),
+    since: datetime | None = Query(None, description="Filter by created_at >= since"),
     enabled_only: bool = Query(
         False, description="Only show checks for models with monitoring enabled"
     ),
@@ -187,7 +186,7 @@ async def get_uptime_history(
         filters.append(UptimeCheck.created_at >= since)
 
     if enabled_only:
-        filters.append(Model.enabled_for_monitoring == True)
+        filters.append(Model.enabled_for_monitoring.is_(True))
 
     count_stmt = select(func.count(UptimeCheck.id))
     if enabled_only:
@@ -246,9 +245,9 @@ async def get_uptime_history(
 @router.get("/uptime/export")
 async def export_uptime_history(
     format: str = Query("json", pattern="^(json|csv)$"),
-    model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
-    start_date: Optional[datetime] = Query(None, description="Filter by created_at >= start_date"),
-    end_date: Optional[datetime] = Query(None, description="Filter by created_at <= end_date"),
+    model_id: uuid.UUID | None = Query(None, description="Filter by model ID"),
+    start_date: datetime | None = Query(None, description="Filter by created_at >= start_date"),
+    end_date: datetime | None = Query(None, description="Filter by created_at <= end_date"),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """Export uptime check history in JSON or CSV format.

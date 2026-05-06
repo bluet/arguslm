@@ -21,6 +21,10 @@ from arguslm.schemas.provider import (
     ProviderUpdate,
 )
 from arguslm.server.core.litellm_client import LiteLLMClient
+from arguslm.server.core.providers import (
+    PROVIDER_CATALOG,
+    TESTED_PROVIDERS,
+)
 from arguslm.server.db.init import get_db
 from arguslm.server.discovery import get_source_for_provider
 from arguslm.server.discovery.anthropic import AnthropicModelSource
@@ -237,14 +241,6 @@ async def delete_provider(
     logger.info("Deleted provider account: %s", provider.display_name)
 
 
-from arguslm.server.core.providers import (
-    PROVIDER_CATALOG,
-    TESTED_PROVIDERS,
-    get_litellm_model_name,
-    get_provider_spec,
-)
-
-
 async def _test_local_provider_ping(base_url: str, provider_type: str) -> ProviderTestResponse:
     """Test local provider (Ollama/LM Studio) by pinging its API endpoint."""
     if provider_type == "ollama":
@@ -263,7 +259,9 @@ async def _test_local_provider_ping(base_url: str, provider_type: str) -> Provid
                 model_count = len(data.get("models", data.get("data", [])))
                 return ProviderTestResponse(
                     success=True,
-                    message=f"Server reachable, {model_count} model(s) available ({int(latency_ms)}ms)",
+                    message=(
+                        f"Server reachable, {model_count} model(s) available ({int(latency_ms)}ms)"
+                    ),
                     details={"models_found": model_count, "latency_ms": int(latency_ms)},
                 )
             else:

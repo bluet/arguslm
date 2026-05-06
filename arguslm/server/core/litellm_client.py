@@ -11,18 +11,19 @@ Provides a unified interface for calling LLM APIs through LiteLLM with:
 
 import asyncio
 import logging
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Any, AsyncIterator, Dict, List, Optional
+from typing import Any
 
 import litellm
 from litellm import acompletion
 from litellm.exceptions import (
     APIError,
-    Timeout,
-    RateLimitError,
     AuthenticationError,
     BadRequestError,
+    RateLimitError,
     ServiceUnavailableError,
+    Timeout,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,17 +34,17 @@ class CompletionConfig:
     """Configuration for LLM completion requests."""
 
     model: str
-    messages: List[Dict[str, str]]
+    messages: list[dict[str, str]]
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
     stream: bool = False
     timeout: float = 60.0
     max_retries: int = 3
     retry_delay: float = 1.0
     retry_multiplier: float = 2.0
-    api_key: Optional[str] = None
-    api_base: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    api_key: str | None = None
+    api_base: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class LiteLLMClient:
@@ -94,16 +95,16 @@ class LiteLLMClient:
     async def complete(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        timeout: Optional[float] = None,
-        max_retries: Optional[int] = None,
-        api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        max_tokens: int | None = None,
+        timeout: float | None = None,
+        max_retries: int | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute non-streaming completion with retry logic.
 
@@ -148,16 +149,16 @@ class LiteLLMClient:
     async def complete_stream(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        timeout: Optional[float] = None,
-        max_retries: Optional[int] = None,
-        api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        max_tokens: int | None = None,
+        timeout: float | None = None,
+        max_retries: int | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs,
-    ) -> AsyncIterator[Dict[str, Any]]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """
         Execute streaming completion with retry logic.
 
@@ -204,7 +205,7 @@ class LiteLLMClient:
         self,
         config: CompletionConfig,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute non-streaming completion with exponential backoff retry."""
         last_exception = None
         retry_delay = config.retry_delay
@@ -279,7 +280,7 @@ class LiteLLMClient:
         self,
         config: CompletionConfig,
         **kwargs,
-    ) -> AsyncIterator[Dict[str, Any]]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """Execute streaming completion with exponential backoff retry."""
         last_exception = None
         retry_delay = config.retry_delay
@@ -337,7 +338,10 @@ class LiteLLMClient:
                     retry_delay *= config.retry_multiplier
                 else:
                     logger.error(
-                        f"All {config.max_retries} streaming attempts failed for model {config.model}: {e}"
+                        "All %d streaming attempts failed for model %s: %s",
+                        config.max_retries,
+                        config.model,
+                        e,
                     )
 
             except Exception as e:
@@ -354,9 +358,9 @@ class LiteLLMClient:
 # Convenience function for quick usage
 async def complete(
     model: str,
-    messages: List[Dict[str, str]],
+    messages: list[dict[str, str]],
     **kwargs,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Convenience function for one-off completions.
 

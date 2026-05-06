@@ -17,7 +17,9 @@ class BenchmarkCreate(BaseModel):
     )
     prompt_pack: str = Field(
         ...,
-        description="The set of prompts to use for benchmarking (e.g., 'shakespeare', 'synthetic_medium')",
+        description=(
+            "The set of prompts to use for benchmarking (e.g., 'shakespeare', 'synthetic_medium')"
+        ),
         examples=["shakespeare"],
     )
     name: str | None = Field(
