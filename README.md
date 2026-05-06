@@ -294,5 +294,4 @@ ArgusLM is released under the [Apache License 2.0](LICENSE).
 
 *Named after Argus Panoptes, the all-seeing giant of Greek mythology.*
 
-
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbluet%2Farguslm.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbluet%2Farguslm?ref=badge_large)
