@@ -6,6 +6,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/bluet/arguslm?style=social)](https://github.com/bluet/arguslm/stargazers)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://www.python.org/downloads/)
 [![Docker Hub](https://img.shields.io/docker/v/bluet/arguslm?label=docker&style=flat-square)](https://hub.docker.com/r/bluet/arguslm)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbluet%2Farguslm.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbluet%2Farguslm?ref=badge_shield)
 
 > Know exactly which LLM providers are up, which are fastest,
 > and which are degrading — before your users notice.
@@ -258,6 +259,48 @@ pip install arguslm[server]
 
 ---
 
+## Upgrading
+
+### From v0.3.0 → v0.3.1+
+
+**Breaking change for `docker compose` users.** v0.3.1 changed the
+postgres volume mount path from `/var/lib/postgresql/data` to
+`/var/lib/postgresql` to match Postgres 18's new layout. If you have an
+existing `postgres_data` volume populated by v0.3.0, postgres 18 will
+either refuse to start or initialize a fresh empty cluster — silent data
+loss is possible.
+
+**Option A — preserve data (recommended):**
+
+```bash
+# 1. With v0.3.0 still running, dump everything
+docker compose exec db pg_dumpall -U arguslm > arguslm-backup.sql
+
+# 2. Stop and remove the old volume
+docker compose down -v
+
+# 3. Pull v0.3.1+ and start fresh
+git pull && docker compose pull && docker compose up -d
+
+# 4. Wait for db healthcheck, then restore
+docker compose exec -T db psql -U arguslm < arguslm-backup.sql
+```
+
+**Option B — fresh install (loses all data):**
+
+```bash
+docker compose down -v
+git pull && docker compose pull && docker compose up -d
+```
+
+**Option C — stay on Postgres 17 (simplest if you don't need v18):**
+
+Edit `docker-compose.yml` and pin `image: postgres:17-alpine` and revert
+the volume to `postgres_data:/var/lib/postgresql/data`. No data migration
+needed.
+
+---
+
 ## Documentation
 
 - [Architecture Overview](docs/architecture.md)
@@ -292,3 +335,5 @@ ArgusLM is released under the [Apache License 2.0](LICENSE).
 ---
 
 *Named after Argus Panoptes, the all-seeing giant of Greek mythology.*
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbluet%2Farguslm.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbluet%2Farguslm?ref=badge_large)

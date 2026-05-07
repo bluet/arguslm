@@ -1,10 +1,11 @@
 """Application configuration settings."""
 
-import os
 from functools import lru_cache
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from arguslm import __version__
 
 
 class Settings(BaseSettings):
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
 
     # API
     api_title: str = "ArgusLM API"
-    api_version: str = "0.2.0"
+    api_version: str = __version__
     api_prefix: str = "/api/v1"
 
     # CORS
@@ -37,11 +38,12 @@ class Settings(BaseSettings):
     @classmethod
     def validate_encryption_key(cls, v: str) -> str:
         """Validate ENCRYPTION_KEY is set and is a valid Fernet key."""
+        gen_hint = (
+            "python -c 'from cryptography.fernet import Fernet; "
+            "print(Fernet.generate_key().decode())'"
+        )
         if not v:
-            raise ValueError(
-                "ENCRYPTION_KEY is required. Generate with: "
-                "python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
-            )
+            raise ValueError(f"ENCRYPTION_KEY is required. Generate with: {gen_hint}")
         try:
             from cryptography.fernet import Fernet
 
@@ -49,7 +51,7 @@ class Settings(BaseSettings):
         except Exception:
             raise ValueError(
                 "ENCRYPTION_KEY is invalid. Must be a valid Fernet key (44 chars, base64). "
-                "Generate with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+                f"Generate with: {gen_hint}"
             )
         return v
 

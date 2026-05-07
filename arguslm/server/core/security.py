@@ -1,4 +1,11 @@
-"""Credential encryption utilities using Fernet symmetric encryption."""
+"""Credential encryption utilities using Fernet symmetric encryption.
+
+Import-time contract: this module MUST remain side-effect-free. Do NOT
+instantiate `CredentialEncryption()` or call `Settings()` at module scope —
+`tests/conftest.py` imports `CredentialEncryption` to generate a test
+ENCRYPTION_KEY before env vars are populated, and any premature
+instantiation here would raise at collection time.
+"""
 
 import json
 import os

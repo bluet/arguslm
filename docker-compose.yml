@@ -51,14 +51,14 @@ services:
       - arguslm-network
 
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: arguslm-db
     environment:
       POSTGRES_USER: "${DB_USER:-arguslm}"
       POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD required - run: python scripts/generate-secrets.py >> .env}"
       POSTGRES_DB: "${DB_NAME:-arguslm}"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:

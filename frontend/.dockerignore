@@ -1,0 +1,33 @@
+# Local dev artifacts — never ship into the build context
+node_modules
+dist
+.vite
+coverage
+
+# Test/lint caches
+.eslintcache
+.cache
+
+# Editor/OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Secrets & local config — must never enter image layers
+.env
+.env.*
+!.env.example
+
+# VCS
+.git
+.gitignore
+
+# CI/Docker scaffolding (already on host)
+Dockerfile
+.dockerignore
+
+# Playwright/browser artifacts
+.playwright-mcp
+playwright-report
+test-results

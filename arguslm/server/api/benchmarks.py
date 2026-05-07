@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from datetime import UTC, datetime
 
 from fastapi import (
     APIRouter,
@@ -41,8 +41,7 @@ from arguslm.server.db.init import get_db
 from arguslm.server.models.benchmark import BenchmarkResult, BenchmarkRun
 from arguslm.server.models.model import Model
 
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/benchmarks", tags=["benchmarks"])
 
@@ -59,7 +58,17 @@ async def _broadcast_to_run(run_id: uuid.UUID, message: dict) -> None:
     for ws in connections:
         try:
             await ws.send_json(message)
+        except WebSocketDisconnect:
+            disconnected.append(ws)
         except Exception:
+            # Unexpected — serialization bug, runtime state issue, etc.
+            # Drop the client (we can't keep retrying), but log so the
+            # underlying problem is visible. Without this, repeated payload
+            # bugs would silently mark every client "disconnected".
+            logger.exception(
+                "benchmark_broadcast_failed",
+                extra={"run_id": str(run_id)},
+            )
             disconnected.append(ws)
     # Clean up disconnected
     for ws in disconnected:
@@ -137,7 +146,7 @@ async def _run_benchmark_task(
 
             # Update run status to completed
             run.status = "completed"
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.now(UTC)
             await db.commit()
 
             # Broadcast completion
@@ -150,10 +159,17 @@ async def _run_benchmark_task(
                 run = result.scalar_one_or_none()
                 if run:
                     run.status = "failed"
-                    run.completed_at = datetime.now(timezone.utc)
+                    run.completed_at = datetime.now(UTC)
                     await db.commit()
             except Exception:
-                pass
+                # Secondary failure: we can't persist the failed status.
+                # Log so on-call sees BOTH failures (the original benchmark
+                # error AND why we couldn't record it). Without this, the
+                # run is left forever in "running" with no error trace.
+                logger.exception(
+                    "benchmark_failed_status_persist_failed",
+                    extra={"run_id": str(run_id)},
+                )
 
             # Broadcast error
             await _broadcast_to_run(run_id, {"type": "error", "error": str(e), "status": "failed"})
@@ -226,16 +242,14 @@ async def create_benchmark(
         )
 
     # Create benchmark run record
-    run_name = (
-        benchmark.name or f"Benchmark {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}"
-    )
+    run_name = benchmark.name or f"Benchmark {datetime.now(UTC).strftime('%Y-%m-%d %H:%M')}"
     run = BenchmarkRun(
         name=run_name,
         model_ids=[str(mid) for mid in benchmark.model_ids],
         prompt_pack=benchmark.prompt_pack,
         status="pending",
         triggered_by="user",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         completed_at=None,
     )
     db.add(run)
@@ -566,7 +580,7 @@ async def stream_benchmark(
                 # Echo pings as pongs
                 if data == "ping":
                     await websocket.send_text("pong")
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Send keep-alive ping
                 try:
                     await websocket.send_json({"type": "ping"})

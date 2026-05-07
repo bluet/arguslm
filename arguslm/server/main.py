@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from arguslm import __version__
 from arguslm.server.api.alerts import router as alerts_router
 from arguslm.server.api.benchmarks import router as benchmarks_router
 from arguslm.server.api.models import router as models_router
@@ -21,7 +22,7 @@ async def lifespan(app: FastAPI):
     await stop_scheduler()
 
 
-app = FastAPI(title="ArgusLM API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="ArgusLM API", version=__version__, lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(

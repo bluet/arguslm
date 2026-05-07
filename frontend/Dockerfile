@@ -1,5 +1,5 @@
 # Stage 1: Build - Node.js build environment
-FROM node:20-alpine as builder
+FROM node:24-alpine as builder
 
 WORKDIR /app
 

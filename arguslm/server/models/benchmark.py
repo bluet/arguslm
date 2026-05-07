@@ -1,13 +1,16 @@
 """Benchmark run and result models."""
 
 import uuid
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from arguslm.server.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from arguslm.server.models.model import Model
 
 BenchmarkStatus = Literal["pending", "running", "completed", "failed"]
 BenchmarkTrigger = Literal["user", "scheduled"]

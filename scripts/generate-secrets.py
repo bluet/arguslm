@@ -9,7 +9,7 @@ Usage:
 Requirements:
     pip install cryptography
     # Or run via Docker (no local dependencies):
-    docker run --rm python:3.11-slim sh -c "pip install -q cryptography && python -c '
+    docker run --rm python:3.14-slim sh -c "pip install -q cryptography && python -c '
 from cryptography.fernet import Fernet
 import secrets
 print(f\"ENCRYPTION_KEY={Fernet.generate_key().decode()}\")

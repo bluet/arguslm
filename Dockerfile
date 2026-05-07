@@ -1,5 +1,5 @@
 # Stage 1: Builder - includes dev dependencies for building
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -7,16 +7,19 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY arguslm ./arguslm
 COPY tests ./tests
+COPY data ./data
 
 # Install all dependencies (including dev) for building
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -e ".[server,dev]"
 
-# Run tests to verify build
-RUN pytest tests/ --tb=short || true
+# Note: tests are run by CI on every commit (matrix across Python 3.11–3.14).
+# We deliberately do NOT run pytest here — `RUN pytest ... || true` masks
+# failures and would let a broken build ship to Docker Hub via the auto-publish
+# workflow on tag push. CI is the gate; the Docker build only assembles bytes.
 
 # Stage 2: Runtime - production image with only runtime dependencies
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
@@ -24,11 +27,14 @@ WORKDIR /app
 RUN useradd -m -u 1000 appuser
 
 # Copy only production dependencies from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY --chown=appuser:appuser arguslm ./arguslm
+# --chmod=555 makes the application code read-only at runtime (no write,
+# even by appuser). The container can still read and execute, but a
+# compromised process can't modify its own code.
+COPY --chown=appuser:appuser --chmod=555 arguslm ./arguslm
 
 # Set Python environment variables
 ENV PYTHONUNBUFFERED=1 \

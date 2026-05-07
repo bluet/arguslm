@@ -21,10 +21,15 @@ from arguslm.schemas.provider import (
     ProviderUpdate,
 )
 from arguslm.server.core.litellm_client import LiteLLMClient
+from arguslm.server.core.providers import (
+    PROVIDER_CATALOG,
+    TESTED_PROVIDERS,
+)
 from arguslm.server.db.init import get_db
 from arguslm.server.discovery import get_source_for_provider
 from arguslm.server.discovery.anthropic import AnthropicModelSource
 from arguslm.server.discovery.azure import AzureOpenAIModelSource
+from arguslm.server.discovery.base import DiscoveryError
 from arguslm.server.discovery.bedrock import BedrockModelSource
 from arguslm.server.discovery.google_ai_studio import GoogleAIStudioModelSource
 from arguslm.server.discovery.ollama import OllamaModelSource
@@ -237,14 +242,6 @@ async def delete_provider(
     logger.info("Deleted provider account: %s", provider.display_name)
 
 
-from arguslm.server.core.providers import (
-    PROVIDER_CATALOG,
-    TESTED_PROVIDERS,
-    get_litellm_model_name,
-    get_provider_spec,
-)
-
-
 async def _test_local_provider_ping(base_url: str, provider_type: str) -> ProviderTestResponse:
     """Test local provider (Ollama/LM Studio) by pinging its API endpoint."""
     if provider_type == "ollama":
@@ -263,7 +260,9 @@ async def _test_local_provider_ping(base_url: str, provider_type: str) -> Provid
                 model_count = len(data.get("models", data.get("data", [])))
                 return ProviderTestResponse(
                     success=True,
-                    message=f"Server reachable, {model_count} model(s) available ({int(latency_ms)}ms)",
+                    message=(
+                        f"Server reachable, {model_count} model(s) available ({int(latency_ms)}ms)"
+                    ),
                     details={"models_found": model_count, "latency_ms": int(latency_ms)},
                 )
             else:
@@ -535,13 +534,21 @@ async def refresh_provider_models(
             message=f"Discovered {len(model_descriptors)} models, added {new_count} new models",
         )
 
+    except DiscoveryError as e:
+        # Discovery raised a structured operational error (auth fail, missing
+        # dep, network timeout, etc). The message is already human-readable
+        # and safe to surface to the user via HTTP 500.
+        logger.warning("Discovery failed for provider %s: %s", provider.display_name, e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
     except Exception as e:
-        logger.error(
-            "Model refresh failed for provider %s: %s",
-            provider.display_name,
-            str(e),
-        )
+        # Unexpected error (bug, panic, anything not surfaced as DiscoveryError).
+        # Logged with full traceback; user gets a generic message to avoid
+        # leaking internal details.
+        logger.exception("Model refresh failed unexpectedly for provider %s", provider.display_name)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Model refresh failed: {str(e)}",
-        )
+        ) from e

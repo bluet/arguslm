@@ -210,12 +210,26 @@ const MonitoringPage: React.FC = () => {
           <Activity className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           Monitoring Configuration
         </h1>
-        {config?.last_run_at && (
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Last run: {new Date(config.last_run_at).toLocaleString()}
-          </div>
-        )}
+        {config?.last_run_at && (() => {
+          // Heartbeat staleness: if the background task hasn't advanced last_run_at
+          // in 2x the configured interval, the task isn't running. The backend
+          // updates last_run_at in a finally block on every attempt (success OR
+          // failure), so staleness specifically means "task not executing at all".
+          // See arguslm/server/api/monitoring.py:run_uptime_checks_task.
+          const ageMs = Date.now() - new Date(config.last_run_at).getTime();
+          const isStale = config.enabled && ageMs > config.interval_minutes * 60_000 * 2;
+
+          return (
+            <div className={`text-sm flex items-center gap-2 ${
+              isStale
+                ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-md border border-amber-200 dark:border-amber-800'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}>
+              {isStale ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              {isStale ? 'Last run stale — check server logs' : `Last run: ${new Date(config.last_run_at).toLocaleString()}`}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Section 1: Global Configuration */}

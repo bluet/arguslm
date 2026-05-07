@@ -7,7 +7,7 @@ Ref: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_ListFoundationM
 import logging
 from typing import TYPE_CHECKING
 
-from arguslm.server.discovery.base import ModelDescriptor
+from arguslm.server.discovery.base import DiscoveryError, ModelDescriptor
 
 if TYPE_CHECKING:
     from arguslm.server.models.provider import ProviderAccount
@@ -38,9 +38,9 @@ class BedrockModelSource:
             credentials = account.credentials
             region = credentials.get("region", DEFAULT_REGION)
 
-            # Bedrock supports bearer token auth (from AWS console) or IAM credentials
-            # ArgusLM stores bearer token in api_key field
-            api_key = credentials.get("api_key", "")
+            # boto3 requires IAM credentials, not bearer tokens — bearer tokens
+            # stored in `api_key` are unused here. For bearer auth, users must
+            # configure AWS CLI credentials.
 
             # Create boto3 client with timeout configuration
             config = Config(
@@ -108,12 +108,19 @@ class BedrockModelSource:
             )
             return models
 
-        except ImportError:
-            logger.error("boto3 not installed - required for AWS Bedrock model discovery")
-            return []
+        except ImportError as e:
+            # Distinguishes "deployment misconfiguration" from "AWS API failed".
+            raise DiscoveryError(
+                "AWS Bedrock discovery requires boto3. "
+                "Install it with: pip install 'arguslm[server]' (server extra includes boto3)."
+            ) from e
         except Exception as e:
-            logger.exception("Error discovering AWS Bedrock models: %s", str(e))
-            return []
+            # AWS auth failure, network timeout, region misconfiguration, etc.
+            # Logged with traceback for ops; the caller translates to HTTP 500
+            # so the UI can show "AWS authentication failed: <reason>" instead
+            # of "0 models discovered" (which is indistinguishable from success).
+            logger.exception("Error discovering AWS Bedrock models for %s", account.display_name)
+            raise DiscoveryError(f"AWS Bedrock discovery failed: {e}") from e
 
     def supports_discovery(self) -> bool:
         return True

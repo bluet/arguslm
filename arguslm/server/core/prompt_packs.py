@@ -51,7 +51,8 @@ PROMPT_PACKS: dict[str, PromptPack] = {
         id="synthetic_long",
         name="Synthetic Long",
         prompt=(
-            "Write a comprehensive guide on how to start a small business. Cover the following topics:\n"
+            "Write a comprehensive guide on how to start a small business. "
+            "Cover the following topics:\n"
             "1. Identifying a business idea and validating market demand\n"
             "2. Creating a business plan\n"
             "3. Legal structure and registration\n"
@@ -90,9 +91,8 @@ VALID_PROMPT_PACK_IDS: set[str] = set(PROMPT_PACKS.keys())
 def get_prompt_pack(pack_id: str) -> PromptPack:
     """Get a prompt pack by ID."""
     if pack_id not in PROMPT_PACKS:
-        raise ValueError(
-            f"Unknown prompt pack: {pack_id}. Valid options: {', '.join(sorted(VALID_PROMPT_PACK_IDS))}"
-        )
+        valid = ", ".join(sorted(VALID_PROMPT_PACK_IDS))
+        raise ValueError(f"Unknown prompt pack: {pack_id}. Valid options: {valid}")
     return PROMPT_PACKS[pack_id]
 
 

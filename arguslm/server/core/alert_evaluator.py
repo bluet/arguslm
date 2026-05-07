@@ -6,17 +6,12 @@ creating duplicate alerts for the same ongoing incident.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from arguslm.server.models.alert import Alert, AlertRule
 from arguslm.server.models.monitoring import UptimeCheck
-
-if TYPE_CHECKING:
-    from arguslm.server.models.model import Model
 
 
 async def evaluate_alerts(
@@ -36,7 +31,7 @@ async def evaluate_alerts(
         List of newly created Alert instances.
     """
     # Get all enabled rules
-    stmt = select(AlertRule).where(AlertRule.enabled == True)
+    stmt = select(AlertRule).where(AlertRule.enabled.is_(True))
     result = await db.execute(stmt)
     rules = result.scalars().all()
 
@@ -212,7 +207,10 @@ async def _evaluate_model_unavailable_everywhere(
     alert = Alert(
         rule_id=rule.id,
         model_id=None,  # Not tied to specific model
-        message=f"Model '{rule.target_model_name}' is unavailable across all {len(relevant_checks)} provider(s)",
+        message=(
+            f"Model '{rule.target_model_name}' is unavailable across "
+            f"all {len(relevant_checks)} provider(s)"
+        ),
         acknowledged=False,
     )
     db.add(alert)
@@ -239,7 +237,7 @@ async def _has_active_incident(
     """
     conditions = [
         Alert.rule_id == rule_id,
-        Alert.acknowledged == False,
+        Alert.acknowledged.is_(False),
     ]
 
     if model_id is not None:

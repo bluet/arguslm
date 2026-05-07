@@ -1,12 +1,15 @@
 """Provider account model with encrypted credentials."""
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from arguslm.server.core.security import decrypt_credentials, encrypt_credentials
 from arguslm.server.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from arguslm.server.models.model import Model
 
 ProviderType = Literal[
     "openai",

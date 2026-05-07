@@ -1,8 +1,8 @@
 """Monitoring configuration and uptime check API endpoints."""
 
+import logging
 import uuid
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, desc, func, select
@@ -24,6 +24,8 @@ from arguslm.server.core.uptime import check_uptime
 from arguslm.server.db.init import get_db
 from arguslm.server.models.model import Model
 from arguslm.server.models.monitoring import MonitoringConfig, UptimeCheck
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/monitoring", tags=["monitoring"])
 
@@ -101,17 +103,29 @@ async def update_monitoring_config(
 
 
 async def run_uptime_checks_task() -> None:
-    """Background task to run uptime checks for all enabled models."""
+    """Background task to run uptime checks for all enabled models.
+
+    Per-model failures are persisted via ``UptimeCheck.error`` (so individual
+    failed checks are queryable and visible in the UI). This function only
+    catches catastrophic task-level failures (DB lost, scheduler bug, missing
+    prompt pack).
+
+    The ``last_run_at`` heartbeat advances in the ``finally`` block whether
+    the run succeeded or failed — staleness > 2× ``interval_minutes`` is the
+    user-visible "task isn't running" signal (rendered as a warning badge in
+    the Monitoring UI). No new schema columns required.
+    """
     from arguslm.server.db.init import AsyncSessionLocal
 
     async with AsyncSessionLocal() as db:
+        config: MonitoringConfig | None = None
         try:
             config = await get_or_create_default_config(db)
             prompt_pack = config.prompt_pack or "health_check"
 
             stmt = (
                 select(Model)
-                .where(Model.enabled_for_monitoring == True)
+                .where(Model.enabled_for_monitoring.is_(True))
                 .options(selectinload(Model.provider_account))
             )
             result = await db.execute(stmt)
@@ -124,13 +138,17 @@ async def run_uptime_checks_task() -> None:
                 uptime_checks.append(uptime_check)
 
             await evaluate_alerts(db, uptime_checks)
-
-            config.last_run_at = datetime.now(datetime.now().astimezone().tzinfo)
-            await db.commit()
-        except Exception as e:
-            import logging
-
-            logging.error(f"Uptime check failed: {e}")
+        except Exception:
+            logger.exception("uptime_task_failed", extra={"task": "uptime_check"})
+        finally:
+            # Heartbeat: advance last_run_at regardless of success/failure
+            # so the UI can detect "task not running" via staleness check.
+            if config is not None:
+                config.last_run_at = datetime.now(UTC)
+                try:
+                    await db.commit()
+                except Exception:
+                    logger.exception("uptime_task_heartbeat_commit_failed")
 
 
 @router.post("/run", response_model=MonitoringRunResponse)
@@ -154,9 +172,9 @@ async def trigger_monitoring_run(
 
 @router.get("/uptime", response_model=UptimeHistoryResponse)
 async def get_uptime_history(
-    model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
-    status: Optional[str] = Query(None, description="Filter by status (up, down, degraded)"),
-    since: Optional[datetime] = Query(None, description="Filter by created_at >= since"),
+    model_id: uuid.UUID | None = Query(None, description="Filter by model ID"),
+    status: str | None = Query(None, description="Filter by status (up, down, degraded)"),
+    since: datetime | None = Query(None, description="Filter by created_at >= since"),
     enabled_only: bool = Query(
         False, description="Only show checks for models with monitoring enabled"
     ),
@@ -187,7 +205,7 @@ async def get_uptime_history(
         filters.append(UptimeCheck.created_at >= since)
 
     if enabled_only:
-        filters.append(Model.enabled_for_monitoring == True)
+        filters.append(Model.enabled_for_monitoring.is_(True))
 
     count_stmt = select(func.count(UptimeCheck.id))
     if enabled_only:
@@ -246,9 +264,9 @@ async def get_uptime_history(
 @router.get("/uptime/export")
 async def export_uptime_history(
     format: str = Query("json", pattern="^(json|csv)$"),
-    model_id: Optional[uuid.UUID] = Query(None, description="Filter by model ID"),
-    start_date: Optional[datetime] = Query(None, description="Filter by created_at >= start_date"),
-    end_date: Optional[datetime] = Query(None, description="Filter by created_at <= end_date"),
+    model_id: uuid.UUID | None = Query(None, description="Filter by model ID"),
+    start_date: datetime | None = Query(None, description="Filter by created_at >= start_date"),
+    end_date: datetime | None = Query(None, description="Filter by created_at <= end_date"),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """Export uptime check history in JSON or CSV format.

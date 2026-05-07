@@ -1,26 +1,30 @@
 """Model Management API endpoints."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from arguslm.schemas.model import ModelCreate, ModelListResponse, ModelResponse, ModelUpdate
 from arguslm.server.db.init import get_db
-from arguslm.server.models.model import Model, create_manual_model, update_custom_name, validate_model_id
+from arguslm.server.models.model import (
+    Model,
+    create_manual_model,
+    update_custom_name,
+    validate_model_id,
+)
 
 router = APIRouter(prefix="/api/v1/models", tags=["models"])
 
 
 @router.get("", response_model=ModelListResponse)
 async def list_models(
-    provider_id: Optional[UUID] = Query(None, description="Filter by provider account ID"),
-    enabled_for_monitoring: Optional[bool] = Query(None, description="Filter by monitoring status"),
-    enabled_for_benchmark: Optional[bool] = Query(None, description="Filter by benchmark status"),
-    search: Optional[str] = Query(None, description="Search in model_id and custom_name"),
+    provider_id: UUID | None = Query(None, description="Filter by provider account ID"),
+    enabled_for_monitoring: bool | None = Query(None, description="Filter by monitoring status"),
+    enabled_for_benchmark: bool | None = Query(None, description="Filter by benchmark status"),
+    search: str | None = Query(None, description="Search in model_id and custom_name"),
     limit: int = Query(50, ge=1, le=500, description="Number of results per page (max 500)"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_db),
@@ -172,7 +176,10 @@ async def create_model(
     if not validate_model_id(create_data.model_id):
         raise HTTPException(
             status_code=400,
-            detail="Invalid model_id format. Must contain only alphanumeric characters, hyphens, and underscores.",
+            detail=(
+                "Invalid model_id format. Must contain only alphanumeric characters, "
+                "hyphens, and underscores."
+            ),
         )
 
     # Create the model

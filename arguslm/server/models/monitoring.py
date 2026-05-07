@@ -1,13 +1,16 @@
 """Monitoring configuration and uptime check models."""
 
 import uuid
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from arguslm.server.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from arguslm.server.models.model import Model
 
 UptimeStatus = Literal["up", "down", "degraded"]
 
