@@ -1,7 +1,8 @@
 """Monitoring configuration and uptime check API endpoints."""
 
+import logging
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, desc, func, select
@@ -23,6 +24,8 @@ from arguslm.server.core.uptime import check_uptime
 from arguslm.server.db.init import get_db
 from arguslm.server.models.model import Model
 from arguslm.server.models.monitoring import MonitoringConfig, UptimeCheck
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/monitoring", tags=["monitoring"])
 
@@ -100,10 +103,22 @@ async def update_monitoring_config(
 
 
 async def run_uptime_checks_task() -> None:
-    """Background task to run uptime checks for all enabled models."""
+    """Background task to run uptime checks for all enabled models.
+
+    Per-model failures are persisted via ``UptimeCheck.error`` (so individual
+    failed checks are queryable and visible in the UI). This function only
+    catches catastrophic task-level failures (DB lost, scheduler bug, missing
+    prompt pack).
+
+    The ``last_run_at`` heartbeat advances in the ``finally`` block whether
+    the run succeeded or failed — staleness > 2× ``interval_minutes`` is the
+    user-visible "task isn't running" signal (rendered as a warning badge in
+    the Monitoring UI). No new schema columns required.
+    """
     from arguslm.server.db.init import AsyncSessionLocal
 
     async with AsyncSessionLocal() as db:
+        config: MonitoringConfig | None = None
         try:
             config = await get_or_create_default_config(db)
             prompt_pack = config.prompt_pack or "health_check"
@@ -123,13 +138,17 @@ async def run_uptime_checks_task() -> None:
                 uptime_checks.append(uptime_check)
 
             await evaluate_alerts(db, uptime_checks)
-
-            config.last_run_at = datetime.now(datetime.now().astimezone().tzinfo)
-            await db.commit()
-        except Exception as e:
-            import logging
-
-            logging.error(f"Uptime check failed: {e}")
+        except Exception:
+            logger.exception("uptime_task_failed", extra={"task": "uptime_check"})
+        finally:
+            # Heartbeat: advance last_run_at regardless of success/failure
+            # so the UI can detect "task not running" via staleness check.
+            if config is not None:
+                config.last_run_at = datetime.now(UTC)
+                try:
+                    await db.commit()
+                except Exception:
+                    logger.exception("uptime_task_heartbeat_commit_failed")
 
 
 @router.post("/run", response_model=MonitoringRunResponse)

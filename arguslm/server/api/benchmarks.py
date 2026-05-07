@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from datetime import UTC, datetime
 
@@ -40,6 +41,8 @@ from arguslm.server.db.init import get_db
 from arguslm.server.models.benchmark import BenchmarkResult, BenchmarkRun
 from arguslm.server.models.model import Model
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/v1/benchmarks", tags=["benchmarks"])
 
 # Store for active WebSocket connections per run_id
@@ -55,7 +58,17 @@ async def _broadcast_to_run(run_id: uuid.UUID, message: dict) -> None:
     for ws in connections:
         try:
             await ws.send_json(message)
+        except WebSocketDisconnect:
+            disconnected.append(ws)
         except Exception:
+            # Unexpected — serialization bug, runtime state issue, etc.
+            # Drop the client (we can't keep retrying), but log so the
+            # underlying problem is visible. Without this, repeated payload
+            # bugs would silently mark every client "disconnected".
+            logger.exception(
+                "benchmark_broadcast_failed",
+                extra={"run_id": str(run_id)},
+            )
             disconnected.append(ws)
     # Clean up disconnected
     for ws in disconnected:
@@ -149,7 +162,14 @@ async def _run_benchmark_task(
                     run.completed_at = datetime.now(UTC)
                     await db.commit()
             except Exception:
-                pass
+                # Secondary failure: we can't persist the failed status.
+                # Log so on-call sees BOTH failures (the original benchmark
+                # error AND why we couldn't record it). Without this, the
+                # run is left forever in "running" with no error trace.
+                logger.exception(
+                    "benchmark_failed_status_persist_failed",
+                    extra={"run_id": str(run_id)},
+                )
 
             # Broadcast error
             await _broadcast_to_run(run_id, {"type": "error", "error": str(e), "status": "failed"})

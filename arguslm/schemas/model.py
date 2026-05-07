@@ -4,7 +4,21 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def _blank_to_none(v: str | None) -> str | None:
+    """Normalize empty/whitespace-only strings to None.
+
+    HTML forms POST cleared inputs as ``""`` by default. Storing ``""`` in
+    ``custom_name`` would silently break the ``custom_name or model_id``
+    fallback used at every display site (model would render as ``model_id``
+    while the DB has ``""`` — silent UX corruption). Normalizing here makes
+    the contract explicit: empty/whitespace → None → fallback to ``model_id``.
+    """
+    if v is None or (isinstance(v, str) and v.strip() == ""):
+        return None
+    return v
 
 
 class ModelCreate(BaseModel):
@@ -28,6 +42,9 @@ class ModelCreate(BaseModel):
         description="Optional human-readable display name for the model",
         examples=["My Production GPT-4o"],
     )
+
+    _normalize_custom_name = field_validator("custom_name", mode="before")(_blank_to_none)
+
     metadata: dict[str, Any] | None = Field(
         default_factory=dict,
         description="Additional model metadata such as context window size or pricing",
@@ -40,9 +57,12 @@ class ModelUpdate(BaseModel):
 
     custom_name: str | None = Field(
         None,
-        description="New human-readable display name",
+        description="New human-readable display name (empty string clears the override)",
         examples=["Updated Model Name"],
     )
+
+    _normalize_custom_name = field_validator("custom_name", mode="before")(_blank_to_none)
+
     enabled_for_monitoring: bool | None = Field(
         None,
         description="Whether this model should be included in automated uptime monitoring",

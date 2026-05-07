@@ -265,10 +265,13 @@ class LiteLLMClient:
                         f"All {config.max_retries} attempts failed for model {config.model}: {e}"
                     )
 
-            except Exception as e:
-                # Catch unexpected errors
-                logger.error(f"Unexpected error for model {config.model}: {e}")
-                raise RuntimeError(f"Unexpected error: {e}") from e
+            except Exception:
+                # Unexpected error — log with traceback then re-raise the
+                # original exception so callers can dispatch on its type
+                # (e.g. retry on ConnectionError, alert on MemoryError).
+                # Wrapping as RuntimeError would lose that information.
+                logger.exception("Unexpected error for model %s", config.model)
+                raise
 
         # If we exhausted all retries, raise the last exception
         if last_exception:
@@ -344,9 +347,11 @@ class LiteLLMClient:
                         e,
                     )
 
-            except Exception as e:
-                logger.error(f"Unexpected streaming error for model {config.model}: {e}")
-                raise RuntimeError(f"Unexpected streaming error: {e}") from e
+            except Exception:
+                # Unexpected streaming error — preserve original exception
+                # type. See completion path above for rationale.
+                logger.exception("Unexpected streaming error for model %s", config.model)
+                raise
 
         # If we exhausted all retries, raise the last exception
         if last_exception:

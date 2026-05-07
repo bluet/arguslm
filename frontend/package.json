@@ -1,7 +1,7 @@
 {
   "name": "arguslm-frontend",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "ArgusLM Web UI - The hundred-eyed watcher for your LLM providers",
   "author": "Matthew Lien <bluet@bluet.org> (https://github.com/bluet)",
   "license": "Apache-2.0",

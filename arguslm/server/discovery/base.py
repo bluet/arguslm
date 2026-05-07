@@ -7,6 +7,19 @@ if TYPE_CHECKING:
     from arguslm.server.models.provider import ProviderAccount
 
 
+class DiscoveryError(Exception):
+    """Raised when a model discovery call fails operationally.
+
+    Use this for AWS auth failures, network timeouts, missing dependencies,
+    or any condition where the caller should know discovery did NOT succeed.
+    The legacy contract was "return [] on failure" — that produced silent
+    misleading "0 models discovered" responses indistinguishable from the
+    legitimate "no models enabled in this account" case. New implementations
+    should raise this instead; existing implementations that still return []
+    will be migrated incrementally.
+    """
+
+
 @dataclass
 class ModelDescriptor:
     """Descriptor for a discovered model.
@@ -35,8 +48,18 @@ class ModelSource(Protocol):
             account: Provider account with credentials.
 
         Returns:
-            List of discovered model descriptors.
-            Returns empty list on discovery failure (logs error internally).
+            List of discovered model descriptors. May be legitimately empty
+            if the account has no enabled models — that is NOT a failure.
+
+        Raises:
+            DiscoveryError: When discovery fails operationally (auth error,
+                network timeout, missing dependency). Callers can translate
+                this to an HTTP error with the original cause as ``__cause__``.
+
+        Migration note: legacy implementations may still return [] on
+        failure (the old contract). New implementations MUST raise
+        DiscoveryError so failure cases are distinguishable from
+        "account has no models" success cases.
         """
         ...
 
