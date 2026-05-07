@@ -1,10 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(touch /tmp/.opsera-pre-commit-scan-passed)",
       "Bash(docker build *)",
-      "Bash(git fetch *)",
-      "mcp__plugin_opsera-devsecops_opsera__security-scan"
+      "Bash(git fetch *)"
     ]
   }
 }
