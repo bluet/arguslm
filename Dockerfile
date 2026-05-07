@@ -7,6 +7,7 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY arguslm ./arguslm
 COPY tests ./tests
+COPY data ./data
 
 # Install all dependencies (including dev) for building
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
