@@ -26,7 +26,9 @@ jobs:
             context: ./frontend
             dockerfile: ./frontend/Dockerfile
     steps:
-      - uses: actions/checkout@v6
+      # actions/checkout SHA-pinned for the same supply-chain reasoning
+      # documented below — pinned to v6.0.2 (verified via gh api repos/actions/checkout/tags).
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Resolve version tag
         id: version
