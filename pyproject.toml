@@ -26,37 +26,37 @@ requires-python = ">=3.11"
 
 # SDK-only dependencies (lightweight — what `pip install arguslm` installs)
 dependencies = [
-    "httpx>=0.25.0,<1",
-    "pydantic>=2.5.0,<3",
+    "httpx>=0.28.1,<1",
+    "pydantic>=2.11.0,<3",
 ]
 
 [project.optional-dependencies]
 # WebSocket streaming support (for AsyncArgusLMClient.stream_benchmark)
 ws = [
-    "websockets>=12.0",
+    "websockets>=16.0",
 ]
 # Full server dependencies (what Docker/self-hosted deployment needs)
 server = [
-    "fastapi>=0.109.0",
-    "uvicorn[standard]>=0.27.0",
-    "sqlalchemy>=2.0.25",
-    "asyncpg>=0.29.0",
-    "litellm>=1.83.7,<2",
-    "pydantic-settings>=2.1.0",
-    "python-multipart>=0.0.6",
-    "cryptography>=41.0.0",
-    "apscheduler>=3.10.0",
-    "boto3>=1.34.0",
+    "fastapi>=0.136.0",
+    "uvicorn[standard]>=0.46.0",
+    "sqlalchemy>=2.0.49",
+    "asyncpg>=0.31.0",
+    "litellm>=1.88.0,<2",
+    "pydantic-settings>=2.14.0",
+    "python-multipart>=0.0.27",
+    "cryptography>=48.0.0",
+    "apscheduler>=3.11.0",
+    "boto3>=1.43.0",
 ]
 dev = [
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.1.0",
-    "mypy>=1.8.0",
-    "httpx>=0.26.0",
-    "aiosqlite>=0.20.0",
-    "greenlet>=3.0.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.0",
+    "mypy>=2.0.0",
+    "httpx>=0.28.0",
+    "aiosqlite>=0.22.0",
+    "greenlet>=3.5.0",
 ]
 
 [project.urls]
