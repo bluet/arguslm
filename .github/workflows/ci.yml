@@ -17,7 +17,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+      # litellm (server extra) does not yet support Python 3.14
       - run: pip install -e ".[server,dev]"
+        if: matrix.python-version != '3.14'
+      - run: pip install -e ".[dev]"
+        if: matrix.python-version == '3.14'
       - run: pytest tests/ -x -q
 
   lint:

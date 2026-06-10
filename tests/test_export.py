@@ -1,5 +1,9 @@
 """Tests for export API endpoints."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import json
 import os
 import uuid

@@ -6,6 +6,10 @@ Tests cover three main user journeys:
 3. Alert Rules → Trigger → Notifications
 """
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 from datetime import datetime, timezone

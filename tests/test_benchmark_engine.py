@@ -11,6 +11,7 @@ from typing import Any, AsyncIterator, cast
 from unittest.mock import patch
 
 pytest = importlib.import_module("pytest")
+pytest.importorskip("litellm")
 
 from arguslm.server.core import benchmark_engine
 from arguslm.server.core.benchmark_engine import BenchmarkConfig, BenchmarkResult

@@ -1,5 +1,9 @@
 """Tests for Alert Rules API endpoints."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 from datetime import datetime, timedelta, timezone

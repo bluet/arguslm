@@ -1,5 +1,9 @@
 """Tests for uptime health checks."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import uuid
 from unittest.mock import MagicMock, patch
 

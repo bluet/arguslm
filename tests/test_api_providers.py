@@ -1,5 +1,9 @@
 """Tests for Provider Account CRUD API endpoints."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch

@@ -1,5 +1,9 @@
 """Tests for Model Management API endpoints."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 

@@ -1,5 +1,9 @@
 """Tests for manual model operations and custom naming."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 

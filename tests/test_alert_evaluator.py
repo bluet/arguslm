@@ -1,5 +1,9 @@
 """Tests for alert evaluation service."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 

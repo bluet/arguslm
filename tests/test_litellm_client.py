@@ -9,6 +9,10 @@ Tests cover:
 - Provider configuration mapping
 """
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch

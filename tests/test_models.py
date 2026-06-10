@@ -1,5 +1,9 @@
 """Tests for database models, focusing on ProviderAccount with encryption."""
 
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 import os
 import uuid
 

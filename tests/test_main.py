@@ -1,3 +1,7 @@
+import pytest
+
+pytest.importorskip("sqlalchemy")
+
 from fastapi.testclient import TestClient
 
 from arguslm.server.main import app
