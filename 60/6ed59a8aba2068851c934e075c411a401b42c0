@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_a8ef0b1cd14b4f::t_1f90e74c0f2ef7 48-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "606ed59a8aba2068851c934e075c411a401b42c0",
+  "prompts": {},
+  "sessions": {
+    "s_a8ef0b1cd14b4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "57ef5f03-5154-4b04-960b-0d7529bd7e61",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Matthew (BlueT) Lien <BlueT@BlueT.org>"
+    }
+  }
+}
