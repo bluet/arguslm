@@ -45,3 +45,20 @@ jobs:
       - run: pip install build
       - run: python -m build
       - run: pip install dist/*.whl && python -c "from arguslm import ArgusLMClient; print('Import OK')"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      # Match the Node major used by frontend/Dockerfile (node:24-alpine)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
